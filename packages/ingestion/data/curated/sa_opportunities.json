@@ -1,0 +1,450 @@
+[
+  {
+    "id": "za_sassa_csg_2025",
+    "title": "Child Support Grant (CSG)",
+    "category": "grant",
+    "organization": "SASSA",
+    "regions": ["ZA"],
+    "value_amount": 530,
+    "value_currency": "ZAR",
+    "required_documents": ["ID document", "Child's birth certificate", "Proof of income", "Proof of residence"],
+    "eligibility_rules": [
+      {
+        "all": [
+          {"eq": [{"var": "location.country_code"}, "ZA"]},
+          {"eq": [{"var": "demographics.citizenship_status"}, "citizen"]},
+          {"lte": [{"var": "economic.income_bracket_numeric"}, 5000]},
+          {"gte": [{"var": "economic.dependents_count"}, 1]}
+        ]
+      }
+    ],
+    "source_url": "https://services.sassa.gov.za",
+    "apply_url": "https://services.sassa.gov.za",
+    "provenance": {
+      "extraction_method": "manual_curated",
+      "evidence_links": ["https://services.sassa.gov.za/SassaServices/SocialGrantInformation"],
+      "last_seen_at": "2025-09-29T09:00:00Z",
+      "last_verified_at": "2025-09-29T09:00:00Z",
+      "freshness_score": 1.0
+    }
+  },
+  {
+    "id": "za_sassa_old_age_2025",
+    "title": "Grant for Older Persons",
+    "category": "grant",
+    "organization": "SASSA",
+    "regions": ["ZA"],
+    "value_amount": 2190,
+    "value_currency": "ZAR",
+    "required_documents": ["ID document", "Proof of income", "Proof of residence"],
+    "eligibility_rules": [
+      {
+        "all": [
+          {"eq": [{"var": "location.country_code"}, "ZA"]},
+          {"eq": [{"var": "demographics.citizenship_status"}, "citizen"]},
+          {"gte": [{"var": "demographics.age_bracket_numeric"}, 60]},
+          {"lte": [{"var": "economic.income_bracket_numeric"}, 7500]}
+        ]
+      }
+    ],
+    "source_url": "https://services.sassa.gov.za",
+    "apply_url": "https://services.sassa.gov.za",
+    "provenance": {
+      "extraction_method": "manual_curated",
+      "evidence_links": ["https://services.sassa.gov.za/SassaServices/SocialGrantInformation"],
+      "last_seen_at": "2025-09-29T09:00:00Z",
+      "last_verified_at": "2025-09-29T09:00:00Z",
+      "freshness_score": 1.0
+    }
+  },
+  {
+    "id": "za_sassa_disability_2025",
+    "title": "Disability Grant",
+    "category": "grant",
+    "organization": "SASSA",
+    "regions": ["ZA"],
+    "value_amount": 2190,
+    "value_currency": "ZAR",
+    "required_documents": ["ID document", "Medical assessment report", "Proof of income", "Proof of residence"],
+    "eligibility_rules": [
+      {
+        "all": [
+          {"eq": [{"var": "location.country_code"}, "ZA"]},
+          {"eq": [{"var": "demographics.citizenship_status"}, "citizen"]},
+          {"ne": [{"var": "demographics.disability_status"}, "none"]},
+          {"lte": [{"var": "economic.income_bracket_numeric"}, 7500]}
+        ]
+      }
+    ],
+    "source_url": "https://services.sassa.gov.za",
+    "apply_url": "https://services.sassa.gov.za",
+    "provenance": {
+      "extraction_method": "manual_curated",
+      "evidence_links": ["https://services.sassa.gov.za/SassaServices/SocialGrantInformation"],
+      "last_seen_at": "2025-09-29T09:00:00Z",
+      "last_verified_at": "2025-09-29T09:00:00Z",
+      "freshness_score": 1.0
+    }
+  },
+  {
+    "id": "za_ct_skills_voucher_2025",
+    "title": "City of Cape Town Skills Development Voucher",
+    "category": "training",
+    "organization": "City of Cape Town",
+    "regions": ["ZA-WC"],
+    "value_amount": 1500,
+    "value_currency": "ZAR",
+    "deadline": "2025-12-31T23:59:59Z",
+    "required_documents": ["ID copy", "Proof of residence in Cape Town", "Unemployed affidavit"],
+    "eligibility_rules": [
+      {
+        "all": [
+          {"eq": [{"var": "location.country_code"}, "ZA"]},
+          {"eq": [{"var": "location.province_code"}, "WC"]},
+          {"in": [{"var": "economic.employment_status"}, ["unemployed"]]},
+          {"lte": [{"var": "economic.income_bracket_numeric"}, 4000]}
+        ]
+      }
+    ],
+    "source_url": "https://www.capetown.gov.za/Family%20and%20home/education-and-research-opportunities/adult-education-and-training",
+    "provenance": {
+      "extraction_method": "manual_curated",
+      "evidence_links": ["https://www.capetown.gov.za/Family%20and%20home/education-and-research-opportunities/adult-education-and-training"],
+      "last_seen_at": "2025-09-29T09:00:00Z",
+      "last_verified_at": "2025-09-29T09:00:00Z",
+      "freshness_score": 0.95
+    }
+  },
+  {
+    "id": "za_nsfas_funding_2025",
+    "title": "NSFAS Higher Education Funding",
+    "category": "training",
+    "organization": "NSFAS",
+    "regions": ["ZA"],
+    "value_amount": 47000,
+    "value_currency": "ZAR",
+    "deadline": "2025-01-31T23:59:59Z",
+    "required_documents": ["ID copy", "Matric certificate", "Proof of household income", "University acceptance letter"],
+    "eligibility_rules": [
+      {
+        "all": [
+          {"eq": [{"var": "location.country_code"}, "ZA"]},
+          {"eq": [{"var": "demographics.citizenship_status"}, "citizen"]},
+          {"lte": [{"var": "economic.income_bracket_numeric"}, 7500]},
+          {"in": [{"var": "education_skills.highest_education_level"}, ["matric"]]}
+        ]
+      }
+    ],
+    "source_url": "https://www.nsfas.org.za/content/applications.html",
+    "apply_url": "https://www.nsfas.org.za/content/applications.html",
+    "provenance": {
+      "extraction_method": "manual_curated",
+      "evidence_links": ["https://www.nsfas.org.za/content/applications.html"],
+      "last_seen_at": "2025-09-29T09:00:00Z",
+      "last_verified_at": "2025-09-29T09:00:00Z",
+      "freshness_score": 0.9
+    }
+  },
+  {
+    "id": "za_sayouth_general_worker_ct_2025",
+    "title": "General Worker Opportunities - Cape Town",
+    "category": "job",
+    "organization": "Various Employers via SAYouth",
+    "regions": ["ZA-WC"],
+    "required_documents": ["ID copy", "CV or work history"],
+    "eligibility_rules": [
+      {
+        "all": [
+          {"eq": [{"var": "location.country_code"}, "ZA"]},
+          {"eq": [{"var": "location.province_code"}, "WC"]},
+          {"lte": [{"var": "constraints.max_commute_km"}, 15]}
+        ]
+      }
+    ],
+    "source_url": "https://www.sayouth.mobi",
+    "apply_url": "https://www.sayouth.mobi",
+    "provenance": {
+      "extraction_method": "manual_curated",
+      "evidence_links": ["https://www.sayouth.mobi"],
+      "last_seen_at": "2025-09-29T09:00:00Z",
+      "last_verified_at": "2025-09-29T09:00:00Z",
+      "freshness_score": 0.9
+    }
+  },
+  {
+    "id": "za_sayouth_general_worker_gp_2025",
+    "title": "General Worker Opportunities - Gauteng",
+    "category": "job",
+    "organization": "Various Employers via SAYouth",
+    "regions": ["ZA-GP"],
+    "required_documents": ["ID copy", "CV or work history"],
+    "eligibility_rules": [
+      {
+        "all": [
+          {"eq": [{"var": "location.country_code"}, "ZA"]},
+          {"eq": [{"var": "location.province_code"}, "GP"]},
+          {"lte": [{"var": "constraints.max_commute_km"}, 20]}
+        ]
+      }
+    ],
+    "source_url": "https://www.sayouth.mobi",
+    "apply_url": "https://www.sayouth.mobi",
+    "provenance": {
+      "extraction_method": "manual_curated",
+      "evidence_links": ["https://www.sayouth.mobi"],
+      "last_seen_at": "2025-09-29T09:00:00Z",
+      "last_verified_at": "2025-09-29T09:00:00Z",
+      "freshness_score": 0.9
+    }
+  },
+  {
+    "id": "za_cleaning_services_ct_2025",
+    "title": "Domestic Cleaning Services - Cape Town",
+    "category": "job",
+    "organization": "SweepSouth and Local Agencies",
+    "regions": ["ZA-WC"],
+    "required_documents": ["ID copy", "Character references"],
+    "eligibility_rules": [
+      {
+        "all": [
+          {"eq": [{"var": "location.country_code"}, "ZA"]},
+          {"eq": [{"var": "location.province_code"}, "WC"]},
+          {"in": [{"var": "constraints.transport_mode"}, ["walk", "taxi", "bus"]]},
+          {"lte": [{"var": "constraints.max_commute_km"}, 10]}
+        ]
+      }
+    ],
+    "source_url": "https://www.sweepsouth.com",
+    "apply_url": "https://www.sweepsouth.com",
+    "provenance": {
+      "extraction_method": "manual_curated",
+      "evidence_links": ["https://www.sweepsouth.com/cleaners"],
+      "last_seen_at": "2025-09-29T09:00:00Z",
+      "last_verified_at": "2025-09-29T09:00:00Z",
+      "freshness_score": 0.85
+    }
+  },
+  {
+    "id": "za_digital_literacy_fundza_2025",
+    "title": "FunDza Digital Literacy Program",
+    "category": "training",
+    "organization": "FunDza Literacy Trust",
+    "regions": ["ZA"],
+    "required_documents": ["ID copy", "Library card or internet access confirmation"],
+    "eligibility_rules": [
+      {
+        "all": [
+          {"eq": [{"var": "location.country_code"}, "ZA"]},
+          {"in": [{"var": "constraints.internet_access"}, ["limited", "unlimited"]]},
+          {"in": [{"var": "goals.preferred_categories"}, [["training"], ["jobs"]]]}
+        ]
+      }
+    ],
+    "source_url": "https://fundza.co.za",
+    "apply_url": "https://fundza.co.za",
+    "provenance": {
+      "extraction_method": "manual_curated",
+      "evidence_links": ["https://fundza.co.za/our-programmes"],
+      "last_seen_at": "2025-09-29T09:00:00Z",
+      "last_verified_at": "2025-09-29T09:00:00Z",
+      "freshness_score": 0.8
+    }
+  },
+  {
+    "id": "za_black_sash_debt_help_2025",
+    "title": "Black Sash Debt and Legal Counseling",
+    "category": "service",
+    "organization": "Black Sash",
+    "regions": ["ZA"],
+    "required_documents": ["ID copy", "Documentation of debt/legal issue"],
+    "eligibility_rules": [
+      {
+        "all": [
+          {"eq": [{"var": "location.country_code"}, "ZA"]},
+          {"lte": [{"var": "economic.income_bracket_numeric"}, 5000]},
+          {"in": [{"var": "goals.preferred_categories"}, [["debt"], ["grants"]]]}
+        ]
+      }
+    ],
+    "source_url": "https://www.blacksash.org.za",
+    "apply_url": "https://www.blacksash.org.za/index.php/contact-us",
+    "provenance": {
+      "extraction_method": "manual_curated",
+      "evidence_links": ["https://www.blacksash.org.za/index.php/paralegal-advice"],
+      "last_seen_at": "2025-09-29T09:00:00Z",
+      "last_verified_at": "2025-09-29T09:00:00Z",
+      "freshness_score": 0.9
+    }
+  },
+  {
+    "id": "za_tvet_welding_ct_2025",
+    "title": "TVET Welding Skills Program - Western Cape",
+    "category": "training",
+    "organization": "Western Cape TVET Colleges",
+    "regions": ["ZA-WC"],
+    "value_amount": 2500,
+    "value_currency": "ZAR",
+    "deadline": "2025-02-28T23:59:59Z",
+    "required_documents": ["ID copy", "Matric or equivalent certificate", "Medical certificate"],
+    "eligibility_rules": [
+      {
+        "all": [
+          {"eq": [{"var": "location.country_code"}, "ZA"]},
+          {"eq": [{"var": "location.province_code"}, "WC"]},
+          {"in": [{"var": "education_skills.highest_education_level"}, ["secondary", "matric"]]},
+          {"lte": [{"var": "economic.income_bracket_numeric"}, 5000]}
+        ]
+      }
+    ],
+    "source_url": "https://www.westerncape.gov.za/service/technical-and-vocational-education-and-training-tvet",
+    "provenance": {
+      "extraction_method": "manual_curated",
+      "evidence_links": ["https://www.westerncape.gov.za/service/technical-and-vocational-education-and-training-tvet"],
+      "last_seen_at": "2025-09-29T09:00:00Z",
+      "last_verified_at": "2025-09-29T09:00:00Z",
+      "freshness_score": 0.85
+    }
+  },
+  {
+    "id": "za_community_health_worker_training_2025",
+    "title": "Community Health Worker Training",
+    "category": "training",
+    "organization": "Department of Health",
+    "regions": ["ZA"],
+    "value_amount": 3500,
+    "value_currency": "ZAR",
+    "required_documents": ["ID copy", "Matric certificate", "Criminal clearance certificate"],
+    "eligibility_rules": [
+      {
+        "all": [
+          {"eq": [{"var": "location.country_code"}, "ZA"]},
+          {"eq": [{"var": "demographics.citizenship_status"}, "citizen"]},
+          {"in": [{"var": "education_skills.highest_education_level"}, ["matric", "tvet", "diploma"]]},
+          {"gte": [{"var": "constraints.time_availability_hours_per_week"}, 20]}
+        ]
+      }
+    ],
+    "source_url": "https://www.health.gov.za/community-health-workers/",
+    "provenance": {
+      "extraction_method": "manual_curated",
+      "evidence_links": ["https://www.health.gov.za/community-health-workers/"],
+      "last_seen_at": "2025-09-29T09:00:00Z",
+      "last_verified_at": "2025-09-29T09:00:00Z",
+      "freshness_score": 0.8
+    }
+  },
+  {
+    "id": "za_driver_license_support_2025",
+    "title": "Driving License Support Program",
+    "category": "training",
+    "organization": "Local Driving Schools & NGOs",
+    "regions": ["ZA"],
+    "value_amount": 1500,
+    "value_currency": "ZAR",
+    "required_documents": ["ID copy", "Learner's license", "Eye test certificate"],
+    "eligibility_rules": [
+      {
+        "all": [
+          {"eq": [{"var": "location.country_code"}, "ZA"]},
+          {"gte": [{"var": "demographics.age_bracket_numeric"}, 18]},
+          {"lte": [{"var": "economic.income_bracket_numeric"}, 4000]},
+          {"in": [{"var": "goals.primary_goal"}, ["find_job", "get_training"]]}
+        ]
+      }
+    ],
+    "source_url": "https://www.aa.co.za/on-the-road/learners-and-licence-renewal/getting-your-drivers-licence",
+    "provenance": {
+      "extraction_method": "manual_curated",
+      "evidence_links": ["https://www.aa.co.za/on-the-road/learners-and-licence-renewal/getting-your-drivers-licence"],
+      "last_seen_at": "2025-09-29T09:00:00Z",
+      "last_verified_at": "2025-09-29T09:00:00Z",
+      "freshness_score": 0.7
+    }
+  },
+  {
+    "id": "za_early_childhood_development_training_2025",
+    "title": "Early Childhood Development (ECD) Training",
+    "category": "training",
+    "organization": "Department of Social Development",
+    "regions": ["ZA"],
+    "value_amount": 4000,
+    "value_currency": "ZAR",
+    "deadline": "2025-03-31T23:59:59Z",
+    "required_documents": ["ID copy", "Grade 10 certificate", "Criminal clearance", "Health certificate"],
+    "eligibility_rules": [
+      {
+        "all": [
+          {"eq": [{"var": "location.country_code"}, "ZA"]},
+          {"eq": [{"var": "demographics.citizenship_status"}, "citizen"]},
+          {"in": [{"var": "education_skills.highest_education_level"}, ["secondary", "matric", "tvet"]]},
+          {"gte": [{"var": "constraints.time_availability_hours_per_week"}, 25]}
+        ]
+      }
+    ],
+    "source_url": "https://www.dsd.gov.za/index.php/ecd-programmes",
+    "provenance": {
+      "extraction_method": "manual_curated",
+      "evidence_links": ["https://www.dsd.gov.za/index.php/ecd-programmes"],
+      "last_seen_at": "2025-09-29T09:00:00Z",
+      "last_verified_at": "2025-09-29T09:00:00Z",
+      "freshness_score": 0.85
+    }
+  },
+  {
+    "id": "za_home_based_care_training_2025",
+    "title": "Home-Based Care Training Program",
+    "category": "training",
+    "organization": "Department of Health & NGOs",
+    "regions": ["ZA"],
+    "value_amount": 2000,
+    "value_currency": "ZAR",
+    "required_documents": ["ID copy", "Grade 8 certificate", "Character reference"],
+    "eligibility_rules": [
+      {
+        "all": [
+          {"eq": [{"var": "location.country_code"}, "ZA"]},
+          {"in": [{"var": "education_skills.highest_education_level"}, ["primary", "secondary", "matric"]]},
+          {"gte": [{"var": "constraints.time_availability_hours_per_week"}, 15]},
+          {"in": [{"var": "constraints.transport_mode"}, ["walk", "taxi", "bus", "private"]]}
+        ]
+      }
+    ],
+    "source_url": "https://www.health.gov.za/home-based-care/",
+    "provenance": {
+      "extraction_method": "manual_curated",
+      "evidence_links": ["https://www.health.gov.za/home-based-care/"],
+      "last_seen_at": "2025-09-29T09:00:00Z",
+      "last_verified_at": "2025-09-29T09:00:00Z",
+      "freshness_score": 0.8
+    }
+  },
+  {
+    "id": "za_expanded_public_works_2025",
+    "title": "Expanded Public Works Programme (EPWP)",
+    "category": "job",
+    "organization": "Various Government Departments",
+    "regions": ["ZA"],
+    "value_amount": 209,
+    "value_currency": "ZAR",
+    "required_documents": ["ID copy", "Proof of residence", "Unemployed affidavit"],
+    "eligibility_rules": [
+      {
+        "all": [
+          {"eq": [{"var": "location.country_code"}, "ZA"]},
+          {"eq": [{"var": "demographics.citizenship_status"}, "citizen"]},
+          {"in": [{"var": "economic.employment_status"}, ["unemployed"]]},
+          {"lte": [{"var": "economic.income_bracket_numeric"}, 2000]}
+        ]
+      }
+    ],
+    "source_url": "https://www.epwp.gov.za",
+    "apply_url": "https://www.epwp.gov.za/how_to_apply.html",
+    "provenance": {
+      "extraction_method": "manual_curated",
+      "evidence_links": ["https://www.epwp.gov.za/how_to_apply.html"],
+      "last_seen_at": "2025-09-29T09:00:00Z",
+      "last_verified_at": "2025-09-29T09:00:00Z",
+      "freshness_score": 0.9
+    }
+  }
+]

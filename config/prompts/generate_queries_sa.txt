@@ -1,0 +1,6 @@
+# DeepSeek: Generate Search Queries (SA)
+
+Given a user profile (location, language, interests) and category focus (grants/training/jobs/health/aid), produce 8–15 diverse, localized queries. Prefer official sources first (gov.za, sassa.gov.za, nsfas.org.za, municipal domains), then reputable NGOs. Include locality and region (e.g., Khayelitsha, Western Cape) and synonyms.
+
+Return JSON with fields: intents[], queries[] (strings), sites[] (domains to target) that align with config/search/sa.json.
+

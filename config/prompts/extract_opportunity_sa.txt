@@ -1,0 +1,10 @@
+# DeepSeek: Extract Opportunity (SA)
+
+You are extracting structured opportunity data from South Africa sources (government, SETAs, TVET, municipal, NGOs). Output strict JSON matching the Opportunity schema. Do not include PII.
+
+Return fields if present: title, summary, url, sourceDomain, categories, awardingBody, programName, monetary (currency=ZAR), deadlines (deadlineDate or rolling), requiredDocuments, applicationSteps, jurisdiction (countries=["ZA"], regions/localities if present), eligibility.summary and eligibility.rules as JSON logic (age bands, residency, means tests, docs), metadata (publishedAt, updatedAt), explainability. Infer categories and tags.
+
+Explainability: write concise whyMatched points based on eligibility that a user could understand.
+
+If the page is informational (e.g., clinic hours), map to a "service" opportunity with hours, contact, location in summary.
+

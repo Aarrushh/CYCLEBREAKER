@@ -1,0 +1,34 @@
+{
+  "region": "ZA",
+  "site_filters": [
+    "site:sassa.gov.za",
+    "site:gov.za",
+    "site:nsfas.org.za",
+    "site:labour.gov.za",
+    "site:.gov.za",
+    "site:sayouth.mobi",
+    "site:harambee.co.za",
+    "site:miapp.seta.org.za",
+    "site:tvetcolleges.co.za",
+    "site:westerncape.gov.za",
+    "site:gauteng.gov.za",
+    "site:capetown.gov.za",
+    "site:jobjack.co.za",
+    "site:sweepsouth.com"
+  ],
+  "query_templates": [
+    "{category} {locality} {region} South Africa eligibility site:{domain}",
+    "{category} grant deadline {region} site:{domain}",
+    "{category} learnership {locality} site:{domain}",
+    "clinic hours {locality} site:{domain}",
+    "soup kitchen {locality} {region} site:{domain}",
+    "application requirements {program} site:{domain}"
+  ],
+  "categories": ["grants","training","learnership","jobs","health","aid"],
+  "rate_limits": {
+    "sassa.gov.za": {"rps": 0.1},
+    "gov.za": {"rps": 0.1},
+    "nsfas.org.za": {"rps": 0.05}
+  }
+}
+
