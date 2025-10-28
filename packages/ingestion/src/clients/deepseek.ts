@@ -1,6 +1,7 @@
 import { OpportunitySchema, type Opportunity } from '@cyclebreaker/shared'
+import { resolveSecret } from '../utils/secrets.js'
 
-const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY
+const DEEPSEEK_API_KEY = resolveSecret('DEEPSEEK_API_KEY')
 
 export async function extractOpportunityWithDeepSeek(html: string, url: string): Promise<Opportunity | null> {
   if (!DEEPSEEK_API_KEY) return null

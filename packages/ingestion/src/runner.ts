@@ -1,11 +1,11 @@
 import { setTimeout as delay } from 'node:timers/promises'
-import { fetchText } from './net/fetcher'
-import { searchWithParallel } from './clients/parallel'
-import { extractOpportunityWithDeepSeek } from './clients/deepseek'
-import { sassaAdapters } from './sources/sassa'
-import { nsfasAdapters } from './sources/nsfas'
-import { municipalAdapters } from './sources/municipal'
-import { jobAdapters } from './sources/jobs'
+import { fetchText } from './net/fetcher.js'
+import { searchWithParallel } from './clients/parallel.js'
+import { extractOpportunityWithDeepSeek } from './clients/deepseek.js'
+import { sassaAdapters } from './sources/sassa.js'
+import { nsfasAdapters } from './sources/nsfas.js'
+import { municipalAdapters } from './sources/municipal.js'
+import { jobAdapters } from './sources/jobs.js'
 import type { Opportunity } from '@cyclebreaker/shared'
 
 export type DiscoveryOptions = {

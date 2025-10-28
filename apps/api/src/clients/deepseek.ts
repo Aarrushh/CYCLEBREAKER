@@ -1,6 +1,7 @@
 import 'dotenv/config'
+import { resolveSecret } from '../utils/secrets.js'
 
-const API_KEY = process.env.DEEPSEEK_API_KEY!
+const API_KEY = resolveSecret('DEEPSEEK_API_KEY')
 const API_BASE = process.env.DEEPSEEK_API_BASE || 'https://api.deepseek.com/v1'
 const MODEL = process.env.DEEPSEEK_MODEL || 'deepseek-chat'
 

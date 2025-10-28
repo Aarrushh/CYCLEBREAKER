@@ -48,8 +48,12 @@ Planning approach
 Local development
 - Requirements: Node 18+, npm
 - Setup: npm install
-- Env: cp .env.example .env and fill keys if you plan to use optional APIs
+- Env: cp .env.example .env. Prefer indirection: set secrets as user-level env vars and point to them via *_REF=env:VAR in .env (keeps real keys outside the repo).
 - Run both API and Web: npm run dev
+  - Windows (PowerShell) — set secrets once per user account:
+    - [Environment]::SetEnvironmentVariable('CB_SECRET_DEEPSEEK_API_KEY','{{DEEPSEEK_API_KEY}}','User')
+    - [Environment]::SetEnvironmentVariable('CB_SECRET_NVIDIA_API_KEY','{{NVIDIA_API_KEY}}','User')
+    - [Environment]::SetEnvironmentVariable('CB_SECRET_UNLIMITED_API_KEY','{{UNLIMITED_API_KEY}}','User')
   - API: http://localhost:4000 (POST /profiles, GET /feed, GET /opportunities/:id)
   - Web: http://localhost:3000 (Onboarding at /onboarding, Feed at /feed)
 - Ingestion (stubs): npm run -w @cyclebreaker/ingestion ingest

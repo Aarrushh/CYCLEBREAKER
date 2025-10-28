@@ -1,5 +1,6 @@
 import { load } from 'cheerio'
-import { Adapter, makeSimpleService } from './types'
+import type { Adapter } from './types.js'
+import { makeSimpleService } from './types.js'
 
 async function discoverJobs() {
   return [
@@ -20,7 +21,7 @@ export const jobAdapters: Adapter[] = [
   {
     name: 'jobs-portals',
     discover: async () => discoverJobs(),
-    parse: async (html, url) => parseJobs(html, url),
+    parse: async (html: string, url: string) => parseJobs(html, url),
   },
 ]
 

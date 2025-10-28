@@ -16,11 +16,12 @@
     "typecheck": "npm -ws run typecheck",
     "lint": "npm -ws run lint",
     "test": "cross-env NODE_ENV=test npm -ws run test",
-    "test:ai": "cross-env NODE_ENV=test npm -w @cyclebreaker/ai run test"
+    "test:ai": "cross-env NODE_ENV=test npm -w @cyclebreaker/ai run test",
+    "quick": "node scripts/quick-commit.mjs"
   },
   "devDependencies": {
+    "@swc/helpers": "^0.5.17",
     "concurrently": "^8.2.2",
     "cross-env": "^7.0.3"
   }
 }
-

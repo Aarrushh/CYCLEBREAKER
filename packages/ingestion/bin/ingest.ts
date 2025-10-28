@@ -2,7 +2,7 @@
 import 'dotenv/config'
 import { writeFileSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
-import { runDiscovery } from '../src/runner'
+import { runDiscovery } from '../src/runner.js'
 
 async function main() {
   const region = (process.argv[2] as 'ZA') || 'ZA'

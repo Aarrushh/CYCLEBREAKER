@@ -1,5 +1,6 @@
 import { load } from 'cheerio'
-import { Adapter, makeSimpleService } from './types'
+import type { Adapter } from './types.js'
+import { makeSimpleService } from './types.js'
 
 async function discoverCalendars() {
   // Seed URLs - update with any known stable pages
@@ -19,7 +20,7 @@ export const sassaAdapters: Adapter[] = [
   {
     name: 'sassa-calendars',
     discover: async () => discoverCalendars(),
-    parse: async (html, url) => parseSassa(html, url),
+    parse: async (html: string, url: string) => parseSassa(html, url),
   },
 ]
 

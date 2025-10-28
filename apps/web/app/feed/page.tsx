@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useSearchParams } from "next/navigation"
 import type { MatchResult } from "@cyclebreaker/shared"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000"
@@ -10,10 +9,9 @@ export default function FeedPage() {
   const [matches, setMatches] = useState<MatchResult[]>([])
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  const searchParams = useSearchParams()
-
   useEffect(() => {
-    const profileIdFromUrl = searchParams.get('profile_id')
+    const url = new URL(window.location.href)
+    const profileIdFromUrl = url.searchParams.get('profile_id')
     const profileIdFromStorage = localStorage.getItem("cyclebreaker_profile_id")
     const id = profileIdFromUrl || profileIdFromStorage
     
@@ -31,7 +29,7 @@ export default function FeedPage() {
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
-  }, [searchParams])
+  }, [])
 
   if (error) {
     return (

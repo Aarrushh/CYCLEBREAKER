@@ -1,5 +1,6 @@
 import { load } from 'cheerio'
-import { Adapter, makeSimpleService } from './types'
+import type { Adapter } from './types.js'
+import { makeSimpleService } from './types.js'
 
 async function discoverMunicipal() {
   return [
@@ -19,7 +20,7 @@ export const municipalAdapters: Adapter[] = [
   {
     name: 'municipal-health',
     discover: async () => discoverMunicipal(),
-    parse: async (html, url) => parseMunicipal(html, url),
+    parse: async (html: string, url: string) => parseMunicipal(html, url),
   },
 ]
 

@@ -11,15 +11,19 @@ export function makeSimpleService(
   categories: string[] = ['service']
 ): import('@cyclebreaker/shared').Opportunity {
   return {
-    type: 'service',
+    id: `za_${title.toLowerCase().replace(/[^a-z0-9]+/g, '_')}_${Date.now()}`,
     title,
-    summary,
-    url,
-    categories,
-    jurisdiction: { countries: ['ZA'], regions: [], localities: [] },
-    requiredDocuments: [],
-    applicationSteps: [],
-    explainability: { whyMatched: [] },
-  }
+    category: 'service',
+    organization: 'Various',
+    regions: ['ZA'],
+    required_documents: [],
+    eligibility_rules: [{ all: [{ eq: [{ var: 'location.country_code' }, 'ZA'] }] }],
+    source_url: url,
+    provenance: {
+      extraction_method: 'static_html',
+      last_seen_at: new Date().toISOString(),
+      freshness_score: 0.5,
+    },
+  } as import('@cyclebreaker/shared').Opportunity
 }
 

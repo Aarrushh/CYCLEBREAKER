@@ -1,5 +1,6 @@
 import { load } from 'cheerio'
-import { Adapter, makeSimpleService } from './types'
+import type { Adapter } from './types.js'
+import { makeSimpleService } from './types.js'
 
 async function discoverNsfas() {
   return [
@@ -18,6 +19,6 @@ export const nsfasAdapters: Adapter[] = [
   {
     name: 'nsfas-home',
     discover: async () => discoverNsfas(),
-    parse: async (html, url) => parseNsfas(html, url),
+    parse: async (html: string, url: string) => parseNsfas(html, url),
   },
 ]
