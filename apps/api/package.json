@@ -15,7 +15,7 @@
     "dotenv": "^16.4.5",
     "fastify": "^4.27.2",
     "zod": "^3.23.8",
-    "@cyclebreaker/shared": "*"
+    "@cyclebreaker/shared": "workspace:*"
   },
   "devDependencies": {
     "tsx": "^4.19.0",

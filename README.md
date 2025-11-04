@@ -1,73 +1,57 @@
-# CYCLEBREAKER — Personalized Opportunity Finder (SA-first, PWA-first)
+# CYCLEBREAKER — Simple, explainable opportunity finder (SA-first)
 
-This repository contains the product/technical plan and initial schemas for CycleBreaker SA — a hyper-local, profile-driven opportunity matcher focused on grants, training, jobs, and services for low-income users in South Africa. The current approach is feasibility-first for a solo developer: PWA-only MVP, deterministic matching, curated sources, and minimal PII.
+CycleBreaker helps people in South Africa find relevant grants, jobs, and training using a lightweight PWA and simple, explainable matching. MVP is privacy-first (minimal PII), deterministic, and fast to run on low-end devices.
 
-Core idea
-- Provide high-quality, explainable, transport-aware recommendations matched to a user profile (location, skills, constraints, goals).
-- Prioritize survival-first actions (jobs, grants, debt education) with clear checklists and official links. Avoid risky integrations and USSD for sensitive flows.
+## Quick start
+1) Install Node 18+ and npm
+2) Install deps: `npm install`
+3) (Optional) create `.env` or set secrets as user-level env vars (recommended on Windows):
+   - PowerShell (run once per user):
+     - `[Environment]::SetEnvironmentVariable('CB_SECRET_DEEPSEEK_API_KEY','{{DEEPSEEK_API_KEY}}','User')`
+     - `[Environment]::SetEnvironmentVariable('CB_SECRET_NVIDIA_API_KEY','{{NVIDIA_API_KEY}}','User')`
+     - `[Environment]::SetEnvironmentVariable('CB_SECRET_UNLIMITED_API_KEY','{{UNLIMITED_API_KEY}}','User')`
+4) Run both API and Web: `npm run dev`
+   - API: http://localhost:4000 (POST /profiles, GET /feed, GET /opportunities/:id)
+   - Web: http://localhost:3000 (onboarding at /onboarding, feed at /feed)
 
-What's here now
-- **docs/plan.md** — MVP plan, three prototypes, feasibility and risks, APIs/resources
-- **docs/DELIVERABLES_52WEEK.md** — comprehensive 52-week full-stack plan with 6 modules, AI integration, and Firebase support
-- **docs/roadmap.md** — MVP phases and detailed Week 1 activities
-- **docs/architecture.md** — high-level system design and pipeline
-- **docs/WEEK1_TASKS.md** — actionable Week 1 task breakdown with code examples
-- docs/user-profile.md — profile fields and example JSON
-- docs/eligibility-rules.md — JSON-rule DSL and examples
-- docs/search-strategy.md — search/ingestion approach and ranking
-- docs/sources.md — curated list of sources (SA-first, global later)
-- docs/data-pipeline.md — ingestion, extraction, classification
-- docs/security-privacy.md — PII handling, consent, retention
-- docs/metrics.md — evaluation and product metrics
-- .env.example — API key placeholders and config
-- packages/shared/schema/userProfile.ts — typed schema
-- packages/shared/schema/opportunity.ts — typed schema
+## Simple app design (at a glance)
+- PWA client (apps/web) collects a small profile and shows a feed
+- API (apps/api) validates profile, runs rule-based eligibility, returns matches
+- Matching is deterministic via JSON-like rules in `packages/shared/src/eligibility.ts`
+- Data is curated (no heavy scraping); stored as JSON in `packages/ingestion`
+- Offline-first PWA caching; minimal PII; no USSD in MVP (read-only later via partner)
 
-APIs and resources (free-first)
-- Official portals and zero-rated resources (link, don’t scrape dynamic):
-  - SASSA Services (services.sassa.gov.za): grant info and how-to
-  - SAYouth.mobi (sayouth.mobi): youth jobs/training (zero-rated)
-  - Department of Labour ESSA (essa.labour.gov.za): job seeker portal
-  - NGO content: Black Sash (legal aid), FunDza (literacy), JustMoney (financial education)
-- Optional utilities: OpenStreetMap/Nominatim for geocoding; Google Maps (free tier) if needed
+Flow:
+```
+User (PWA) → API (Fastify) → Rule matcher → Curated opportunities JSON → Personalized feed
+```
 
-Planning approach
-- **MVP-first** (docs/plan.md, docs/roadmap.md): 4-6 week rapid validation with PWA, deterministic rules, curated data
-  - Prototype A (ship first): PWA-only, no USSD, deterministic rules, explainable matching, offline caching
-  - Prototype B (later): Add SMS digest + USSD-lite (read-only public info) via partner
-  - Prototype C (later): Agent/kiosk-assisted onboarding and verification with community partner
-- **Full-scale vision** (docs/DELIVERABLES_52WEEK.md): 52-week plan with 6 modules, AI integration (NVIDIA), Firebase support
-  - Phase 1 (Weeks 1-12): Core build with Jobs, Grants, Training
-  - Phase 2 (Weeks 13-24): AI & matching enhancements, Money & Debt modules
-  - Phase 3 (Weeks 25-36): Government Services & Health modules, SMS/USSD
-  - Phase 4 (Weeks 37-48): Community features, multi-channel access, scalability
-  - Phase 5 (Weeks 49-52): QA, launch, continuous improvement
+## Repository layout
+- apps/api — Fastify API (TypeScript)
+- apps/web — PWA frontend
+- packages/shared — shared types, schemas, and eligibility logic
+- packages/ingestion — stubs and scripts for curated data ingestion
+- docs — plans, architecture, roadmap, and references
+- scripts, config — utilities and prompt/config files
 
-**Approach**: Start with MVP (Weeks 1-12), validate with users, then incrementally add full-scale features based on feedback. Both plans share the same core mission and architecture.
+## Development
+- Common scripts:
+  - `npm run dev` — start API + Web
+  - `npm run build` — build all workspaces
+  - `npm run lint` — lint all packages
+  - `npm run typecheck` — TypeScript type checks
+  - `npm run -w @cyclebreaker/ingestion ingest` — write JSON to `packages/ingestion/data/ingested/`
+- Code style: keep things small, explicit, and explainable; prefer typed schemas and pure functions.
 
-Local development
-- Requirements: Node 18+, npm
-- Setup: npm install
-- Env: cp .env.example .env. Prefer indirection: set secrets as user-level env vars and point to them via *_REF=env:VAR in .env (keeps real keys outside the repo).
-- Run both API and Web: npm run dev
-  - Windows (PowerShell) — set secrets once per user account:
-    - [Environment]::SetEnvironmentVariable('CB_SECRET_DEEPSEEK_API_KEY','{{DEEPSEEK_API_KEY}}','User')
-    - [Environment]::SetEnvironmentVariable('CB_SECRET_NVIDIA_API_KEY','{{NVIDIA_API_KEY}}','User')
-    - [Environment]::SetEnvironmentVariable('CB_SECRET_UNLIMITED_API_KEY','{{UNLIMITED_API_KEY}}','User')
-  - API: http://localhost:4000 (POST /profiles, GET /feed, GET /opportunities/:id)
-  - Web: http://localhost:3000 (Onboarding at /onboarding, Feed at /feed)
-- Ingestion (stubs): npm run -w @cyclebreaker/ingestion ingest
-  - Outputs JSON to packages/ingestion/data/ingested/
+## API (MVP)
+- POST `/profiles` — accepts a minimal profile
+- GET `/feed` — returns opportunities filtered and ranked for the profile
+- GET `/opportunities/:id` — fetch a single item with an explanation
 
-Week 1 objectives (see docs/WEEK1_TASKS.md for detailed breakdown)
-- Finalize minimal profile and opportunity schemas (packages/shared/schema/)
-- Implement JSON-logic evaluator and explainability mapping (packages/shared/src/eligibility.ts)
-- Seed 20–40 curated SA opportunities (grants/training/jobs) with provenance and eligibility rules
-- Implement GET /feed and basic PWA offline caching; onboarding form with validation
-- Set up Windows-safe environment with cross-env for API key management
+## MVP scope and safety
+- Focus: jobs, grants, training with clear checklists and official links
+- No government form auto-submission; no sensitive flows over USSD
+- Keep secrets out of the repo; prefer user-level env vars and indirection
 
-For full 52-week roadmap including AI integration, Health module, and Firebase support, see docs/DELIVERABLES_52WEEK.md.
-
-Notes
-- USSD is excluded from MVP due to security/spoofing risks and lack of secure session state. Any future USSD will be read-only and partner-delivered.
-- Government form auto-submission is out of scope; CycleBreaker provides navigators and official links with checklists.
+## Roadmap & deep dives
+See `docs/plan.md`, `docs/roadmap.md`, `docs/architecture.md`, and `docs/DELIVERABLES_52WEEK.md` for the full plan, design trade-offs, and future modules.

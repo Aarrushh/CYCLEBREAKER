@@ -5,6 +5,7 @@ import { readFile } from 'node:fs/promises'
 import { z } from 'zod'
 import crypto from 'node:crypto'
 import { nvidiaChat } from './clients/nvidia.js'
+import { suggestUserProfile } from './services/profile_suggest.js'
 
 const PORT = Number(process.env.PORT || 4000)
 
@@ -65,6 +66,24 @@ export async function buildServer() {
     profiles.set(id, profile)
     return reply.code(201).send({ id })
   })
+
+  // AI onboarding (optional: returns 501 if key not configured)
+  app.post('/profiles/sort', async (req, reply) => {
+    try {
+      if (!process.env.DEEPSEEK_API_KEY) {
+        return reply.code(501).send({ error: 'AI onboarding disabled (missing DEEPSEEK_API_KEY)' })
+      }
+      const body = (req.body ?? {}) as any
+      const input = String(body.input || '')
+      if (!input || input.length < 10) return reply.code(400).send({ error: 'input is required' })
+      const profile = await suggestUserProfile(input)
+      return { profile }
+    } catch (e: any) {
+      req.log.error(e)
+      return reply.code(500).send({ error: e?.message || 'failed to suggest profile' })
+    }
+  })
+
   app.get('/feed', async (req, reply) => {
     const hasFreshness = (o: any) => o?.provenance?.freshness_score ?? 0
     const list = curated.slice().sort((a, b) => (hasFreshness(b) - hasFreshness(a)))
