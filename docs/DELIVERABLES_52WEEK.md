@@ -186,6 +186,9 @@ Both approaches share the same mission: **break the poverty cycle for SA townshi
 - ✅ Profile-driven matching with explainability
 - ✅ Offline PWA with service worker
 - ✅ 50+ verified SA opportunities
+- ✅ AI wiring (env-gated):
+  - DeepSeek/OpenAI-compatible for AI onboarding at POST /profiles/sort (DEEPSEEK_API_KEY or OPENAI_COMPAT_API_KEY)
+  - NVIDIA scam detection at POST /api/ai/analyze-posting (NVIDIA_API_KEY)
 - 🔄 Basic transport cost awareness
 - 🔄 Admin verification workflow
 

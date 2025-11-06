@@ -1,0 +1,31 @@
+[
+  {
+    "id": "za_sassa_csg_2025",
+    "title": "Child Support Grant (CSG)",
+    "category": "grant",
+    "organization": "SASSA",
+    "regions": ["ZA"],
+    "value_amount": 530,
+    "value_currency": "ZAR",
+    "required_documents": ["ID document", "Child's birth certificate", "Proof of income", "Proof of residence"],
+    "eligibility_rules": [
+      {
+        "all": [
+          {"eq": [{"var": "location.country_code"}, "ZA"]},
+          {"eq": [{"var": "demographics.citizenship_status"}, "citizen"]},
+          {"lte": [{"var": "economic.income_bracket_numeric"}, 5000]},
+          {"gte": [{"var": "economic.dependents_count"}, 1]}
+        ]
+      }
+    ],
+    "source_url": "https://services.sassa.gov.za",
+    "apply_url": "https://services.sassa.gov.za",
+    "provenance": {
+      "extraction_method": "manual_curated",
+      "evidence_links": ["https://services.sassa.gov.za/SassaServices/SocialGrantInformation"],
+      "last_seen_at": "2025-09-29T09:00:00Z",
+      "last_verified_at": "2025-09-29T09:00:00Z",
+      "freshness_score": 1.0
+    }
+  }
+]

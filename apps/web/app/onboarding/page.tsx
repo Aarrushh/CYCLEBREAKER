@@ -39,19 +39,27 @@ export default function OnboardingPage() {
 
   async function onSubmit(values: z.infer<typeof OnboardingSchema>) {
     try {
-      const res = await fetch(`${API_BASE}/profiles`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(values),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        alert(`Error: ${data?.error || "failed"}`)
+      if (API_BASE) {
+        const res = await fetch(`${API_BASE}/profiles`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(values),
+        })
+        const data = await res.json()
+        if (!res.ok) {
+          alert(`Error: ${data?.error || "failed"}`)
+          return
+        }
+        setProfileId(data.id)
+        localStorage.setItem("cyclebreaker_profile_id", data.id)
+        setStep(3)
         return
       }
-      setProfileId(data.id)
-      localStorage.setItem("cyclebreaker_profile_id", data.id)
-      setStep(3) // Success step
+      // Fallback: simulate profile creation client-side
+      const id = crypto.randomUUID()
+      setProfileId(id)
+      localStorage.setItem("cyclebreaker_profile_id", id)
+      setStep(3)
     } catch (error) {
       console.error('Profile creation failed:', error)
       alert('Failed to create profile. Please try again.')

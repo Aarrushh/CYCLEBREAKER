@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import type { MatchResult } from "@cyclebreaker/shared"
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000"
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE
 
 export default function FeedPage() {
   const [matches, setMatches] = useState<MatchResult[]>([])
@@ -13,22 +13,35 @@ export default function FeedPage() {
     const url = new URL(window.location.href)
     const profileIdFromUrl = url.searchParams.get('profile_id')
     const profileIdFromStorage = localStorage.getItem("cyclebreaker_profile_id")
-    const id = profileIdFromUrl || profileIdFromStorage
-    
-    if (!id) {
-      setError("No profile found. Please complete onboarding first.")
-      setLoading(false)
-      return
+    const id = profileIdFromUrl || profileIdFromStorage || 'demo'
+
+    async function load() {
+      try {
+        if (API_BASE) {
+          const r = await fetch(`${API_BASE}/feed?profile_id=${encodeURIComponent(id)}`)
+          const data = await r.json()
+          if (!r.ok) throw new Error(data?.error || 'Failed to load feed')
+          setMatches(data.matches || [])
+          return
+        }
+        // Fallback: static curated dataset
+        const r2 = await fetch('/data/sa_opportunities.json')
+        const list = await r2.json()
+        const ms: MatchResult[] = (Array.isArray(list) ? list : []).map((o: any) => ({
+          opportunity: o,
+          match_score: o?.provenance?.freshness_score || 0.5,
+          why: [],
+          matched_profile_fields: [],
+        }))
+        setMatches(ms)
+      } catch (e: any) {
+        setError(e.message || 'Failed to load feed')
+      } finally {
+        setLoading(false)
+      }
     }
-    
-    fetch(`${API_BASE}/feed?profile_id=${encodeURIComponent(id)}`)
-      .then(async (r) => {
-        const data = await r.json()
-        if (!r.ok) throw new Error(data?.error || "Failed to load feed")
-        setMatches(data.matches || [])
-      })
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false))
+
+    load()
   }, [])
 
   if (error) {

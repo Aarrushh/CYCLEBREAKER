@@ -30,11 +30,14 @@ Common commands and environment
 - Environment variables
   - API
     - PORT (default 4000); listens on 0.0.0.0; dotenv supported; CORS enabled
-    - DEEPSEEK_API_KEY, DEEPSEEK_API_BASE, DEEPSEEK_MODEL used by apps/api/src/clients/deepseek.ts for optional AI profile suggestion
+    - NVIDIA_API_KEY, NVIDIA_API_BASE_URL, NVIDIA_MODEL for scam detection endpoint
+    - DEEPSEEK_API_KEY, DEEPSEEK_API_BASE, DEEPSEEK_MODEL for AI onboarding (/profiles/sort)
+    - OPENAI_COMPAT_API_KEY, OPENAI_COMPAT_BASE_URL (optional OpenAI-compatible provider; e.g., Lao Zhang)
+    - UNLIMITED_API_KEY(S), UNLIMITED_API_BASE_URL (optional OpenAI-compatible provider used by unlimited client)
   - Web
-    - NEXT_PUBLIC_API_BASE (default http://localhost:4000), used by /onboarding and /feed pages
+    - NEXT_PUBLIC_API_BASE (set to deployed API URL in production). If unset, feed and onboarding have offline fallbacks for demo
   - Ingestion
-    - DEEPSEEK_API_KEY and PARALLEL_API_KEY are checked (optional)
+    - DEEPSEEK_API_KEY and/or OPENAI_COMPAT_API_KEY; PARALLEL_API_KEY, PARALLEL_BASE_URL (optional)
 
 Architecture overview
 - Monorepo and tooling
@@ -47,14 +50,15 @@ Architecture overview
   - State: in-memory Map for profiles
   - Data source: packages/ingestion/data/curated/sa_opportunities.json
   - Endpoints:
-    - POST /profiles — validates with shared schema; generates id
-    - GET /feed?profile_id=… — filters curated opportunities via shared evaluator; returns MatchResult[] sorted by score
-    - GET /opportunities/:id — returns a single curated opportunity
+    - POST /profiles — minimal create; returns id
+    - GET /feed?profile_id=… — returns curated opportunities with freshness-based score
+    - POST /api/match — transport-aware ranking via @cyclebreaker/shared
+    - POST /api/ai/analyze-posting — scam detection via NVIDIA (env-gated)
+    - POST /profiles/sort — AI-assisted profile suggestion via DeepSeek/OpenAI-compat (env-gated)
   - Server: listens on 0.0.0.0 at PORT (default 4000); CORS and dotenv enabled
-  - AI-assisted onboarding: /profiles/sort expected by Web is scaffolded in apps/api/src/services/profile_suggest.ts but not mounted in server.ts; requires DEEPSEEK_API_KEY to enable
-- apps/web (Next.js 14 App Router, ESM)
+- apps/web (Next.js App Router)
   - Pages: /onboarding and /feed
-  - Calls API via NEXT_PUBLIC_API_BASE (defaults to http://localhost:4000)
+  - Uses NEXT_PUBLIC_API_BASE in production; if unset, falls back to static curated dataset and local profile id for demo
 - packages/ingestion (CLI + sources)
   - Adapters for curated/static seeds (SASSA/NSFAS/municipal/jobs via cheerio/undici) and optional breadth search hooks (Parallel + DeepSeek placeholders)
   - Writes ingested JSON under packages/ingestion/data/ingested/

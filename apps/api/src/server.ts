@@ -6,6 +6,7 @@ import { z } from 'zod'
 import crypto from 'node:crypto'
 import { nvidiaChat } from './clients/nvidia.js'
 import { suggestUserProfile } from './services/profile_suggest.js'
+import { rankJobsForCandidate, type Candidate, type Job } from '@cyclebreaker/shared'
 
 const PORT = Number(process.env.PORT || 4000)
 
@@ -107,6 +108,19 @@ export async function buildServer() {
     const distance_km = haversineKm(origin, dest)
     const taxi_cost_zar = estimateTaxiCostZAR(distance_km)
     return { origin, destination: dest, distance_km, taxi_cost_zar, model: 'mvp_haversine+taxi_v1' }
+  })
+
+  // Rank jobs for candidate (transport-aware matching)
+  app.post('/api/match', async (req, reply) => {
+    const { candidate, jobs, options } = (req.body ?? {}) as { candidate: Candidate; jobs: Job[]; options?: any }
+    if (!candidate || !Array.isArray(jobs)) return reply.code(400).send({ error: 'candidate and jobs are required' })
+    try {
+      const results = await rankJobsForCandidate(candidate, jobs, { ...(options || {}), explain: true })
+      return { results }
+    } catch (e: any) {
+      req.log.error(e)
+      return reply.code(500).send({ error: e?.message || 'failed to rank' })
+    }
   })
 
   // Jobs filtered by commute cost (client supplies jobs for now)

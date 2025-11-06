@@ -18,7 +18,7 @@
     "undici": "^6.19.8",
     "cheerio": "^1.0.0-rc.12",
     "dotenv": "^16.4.5",
-    "@cyclebreaker/shared": "workspace:*"
+    "@cyclebreaker/shared": "0.0.0"
   },
   "devDependencies": {
     "tsx": "^4.19.0",
