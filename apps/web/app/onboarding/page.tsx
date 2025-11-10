@@ -3,7 +3,7 @@
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { UserProfileSchema, SA_PROVINCES } from "@cyclebreaker/shared"
+import { UserProfileSchema } from "@cyclebreaker/shared"
 import { useState } from "react"
 
 import { getSupabase } from "../../lib/supabase"
@@ -39,40 +39,50 @@ export default function OnboardingPage() {
 
   async function onSubmit(values: z.infer<typeof OnboardingSchema>) {
     try {
-      const supabase = getSupabase()
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .insert([
-          {
-            location: values.location,
-            demographics: values.demographics,
-            economic: values.economic,
-            education_skills: (values as any).education_skills,
-            constraints: values.constraints,
-            goals: values.goals,
-            consent: values.consent,
-          },
-        ])
-        .select('id')
-        .single()
+      const hasSupabase = !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      if (hasSupabase) {
+        const supabase = getSupabase()
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .insert([
+            {
+              location: values.location,
+              demographics: values.demographics,
+              economic: values.economic,
+              education_skills: (values as any).education_skills,
+              constraints: values.constraints,
+              goals: values.goals,
+              consent: values.consent,
+            },
+          ])
+          .select('id')
+          .single()
 
-      if (error) {
-        alert(`Error: ${error.message || 'failed'}`)
-        return
+        if (error) {
+          throw new Error(error.message || 'failed')
+        }
+
+        const id = data?.id
+        if (id) {
+          setProfileId(id)
+          localStorage.setItem('cyclebreaker_profile_id', id)
+          setStep(3)
+          return
+        }
+        throw new Error('No id returned')
       }
-
-      const id = data?.id
-      if (id) {
-        setProfileId(id)
-        localStorage.setItem('cyclebreaker_profile_id', id)
-        setStep(3)
-        return
-      }
-
-      alert('Failed to create profile. Please try again.')
-    } catch (error) {
+      // Fallback: local profile id only
+      const id = (globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2)) as string
+      setProfileId(id)
+      localStorage.setItem('cyclebreaker_profile_id', id)
+      setStep(3)
+    } catch (error: any) {
       console.error('Profile creation failed:', error)
-      alert('Failed to create profile. Please try again.')
+      alert('Saved locally. You can still browse matches. Error: ' + (error?.message || 'unknown'))
+      const id = (globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2)) as string
+      setProfileId(id)
+      localStorage.setItem('cyclebreaker_profile_id', id)
+      setStep(3)
     }
   }
 

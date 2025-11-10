@@ -2,7 +2,7 @@ import './globals.css'
 import { Inter } from 'next/font/google'
 import Link from 'next/link'
 import OfflineIndicatorBanner from '@/components/OfflineIndicatorBanner'
-import { Bell, Settings, Home, User, HelpCircle, Smartphone } from 'lucide-react'
+import { Bell, Settings, Home, User, HelpCircle } from 'lucide-react'
 import ResponsivePreviewToggle from '@/components/ResponsivePreviewToggle.client'
 
 const inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-inter' })
@@ -11,12 +11,15 @@ export const metadata = {
   title: 'CycleBreaker',
   description: 'Breaking the cycle of poverty through opportunity',
   manifest: '/manifest.json',
-  themeColor: '#1B5E20',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
     title: 'CycleBreaker',
   },
+}
+
+export const viewport = {
+  themeColor: '#1B5E20',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

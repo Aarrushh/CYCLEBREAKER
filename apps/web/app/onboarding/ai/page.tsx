@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000"
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE
 
 export default function AIOnboardingPage() {
   const [input, setInput] = useState("")
@@ -33,21 +33,20 @@ export default function AIOnboardingPage() {
 
   function useSuggested() {
     if (!result) return
-    localStorage.setItem("cb_profile_id", "") // clear current id
-    const values = { ...result }
-    // Save the suggested profile immediately
-    fetch(`${API_BASE}/profiles`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(values),
-    })
-      .then(async (r) => {
-        const data = await r.json()
-        if (!r.ok) throw new Error(data?.error || "Save failed")
-        localStorage.setItem("cb_profile_id", data.id)
-        window.location.href = "/feed"
-      })
-      .catch((e) => setError(e.message))
+    try {
+      const id = (globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2)) as string
+      localStorage.setItem('cyclebreaker_profile_id', id)
+      // If API exists, persist server-side as well (best-effort)
+      if (API_BASE) {
+        const values = { ...result }
+        fetch(`${API_BASE}/profiles`, {
+          method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(values),
+        }).catch(() => {})
+      }
+      window.location.href = '/feed'
+    } catch (e: any) {
+      setError(e.message || 'Failed to proceed')
+    }
   }
 
   return (
