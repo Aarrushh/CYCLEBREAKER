@@ -1,7 +1,7 @@
 import { setTimeout as delay } from 'node:timers/promises'
 import { fetchText } from './net/fetcher.js'
 import { searchWithParallel } from './clients/parallel.js'
-import { extractOpportunityWithDeepSeek } from './clients/deepseek.js'
+import { extractOpportunityWithAI } from './clients/ai_extract.js'
 import { sassaAdapters } from './sources/sassa.js'
 import { nsfasAdapters } from './sources/nsfas.js'
 import { municipalAdapters } from './sources/municipal.js'
@@ -51,7 +51,7 @@ export async function runDiscovery(opts: DiscoveryOptions): Promise<Opportunity[
     const urls = await searchWithParallel(q)
     for (const url of urls.slice(0, 20)) {
       const html = await fetchText(url)
-      const opp = await extractOpportunityWithDeepSeek(html, url)
+      const opp = await extractOpportunityWithAI(html, url)
       if (opp) results.push(opp)
       await delay(200)
     }

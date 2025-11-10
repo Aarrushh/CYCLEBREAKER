@@ -5,6 +5,7 @@ import { readFile } from 'node:fs/promises'
 import { z } from 'zod'
 import crypto from 'node:crypto'
 import { nvidiaChat } from './clients/nvidia.js'
+import { resolveSecret } from './utils/secrets.js'
 import { suggestUserProfile } from './services/profile_suggest.js'
 import { rankJobsForCandidate, type Candidate, type Job } from '@cyclebreaker/shared'
 
@@ -57,6 +58,132 @@ export async function buildServer() {
 
   app.get('/health', async () => ({ ok: true }))
 
+  // Basic PII redaction helper (do not log sensitive patterns)
+  function redactPII(s: string): string {
+    return String(s)
+      .replace(/\b\d{13}\b/g, '[ID_NUMBER]')
+      .replace(/\b27\d{9,}\b/g, '[PHONE]')
+      .replace(/[\w.-]+@[\w.-]+\.[A-Za-z]{2,}/g, '[EMAIL]')
+      .replace(/sk-[A-Za-z0-9]{20,}/g, '[API_KEY]')
+  }
+
+  // Debt analysis endpoints (MVP)
+  try {
+    const {
+      DebtAnalyzeRequestSchema,
+      analyzeDebts,
+      NegotiationTemplateRequestSchema,
+      negotiationTemplates,
+      ReportLenderRequestSchema,
+      SummaryCardSchema,
+    } = await import('@cyclebreaker/shared')
+
+    // Analyze debts → plan + hazards + summary cards
+    app.post('/debt/analyze', async (req, reply) => {
+      try {
+        const body = DebtAnalyzeRequestSchema.parse(req.body || {})
+        const result = analyzeDebts(body)
+        return reply.send(result)
+      } catch (e: any) {
+        req.log.error({ err: redactPII(e?.message || 'error') })
+        return reply.code(400).send({ error: 'VALIDATION_ERROR', details: redactPII(e?.message || 'invalid') })
+      }
+    })
+
+    // Negotiation templates
+    app.post('/debt/templates/negotiation', async (req, reply) => {
+      try {
+        const body = NegotiationTemplateRequestSchema.parse(req.body || {})
+        const result = negotiationTemplates(body)
+        return reply.send(result)
+      } catch (e: any) {
+        req.log.error({ err: redactPII(e?.message || 'error') })
+        return reply.code(400).send({ error: 'VALIDATION_ERROR', details: redactPII(e?.message || 'invalid') })
+      }
+    })
+
+    // Private report lender (no public exposure)
+    const reports = new Map<string, any>()
+    app.post('/debt/report-lender', async (req, reply) => {
+      try {
+        const body = ReportLenderRequestSchema.parse(req.body || {})
+        const ref = crypto.randomUUID()
+        // Store minimally with redaction; ephemeral in-memory for MVP
+        reports.set(ref, { ...body, issue: '[REDACTED]', stored_at: new Date().toISOString() })
+        return reply.code(202).send({ status: 'stored', referenceId: ref })
+      } catch (e: any) {
+        req.log.error({ err: redactPII(e?.message || 'error') })
+        return reply.code(400).send({ error: 'VALIDATION_ERROR', details: redactPII(e?.message || 'invalid') })
+      }
+    })
+
+    // Community guidance: stokvel (static MVP content)
+    app.get('/community/guidance/stokvel', async (_req, reply) => {
+      const checklist = [
+        { id: 'constitution', text: 'Written constitution with member sign-off', rationale: 'Sets rules & dispute process' },
+        { id: 'bank_account', text: 'Dedicated bank account (dual signatories)', rationale: 'Transparency & protection' },
+        { id: 'monthly_meetings', text: 'Monthly or fortnightly meetings', rationale: 'Peer accountability' },
+        { id: 'transparent_records', text: 'Treasurer shares monthly statements', rationale: 'Detect issues early' },
+      ]
+      const articles = [
+        { id: 'stokvel_101', title: 'What is a Stokvel?', body: 'Community savings with rotation payouts.', language: 'en', tags: ['stokvel'] },
+      ]
+      return reply.send({ articles, checklist: { items: checklist }, disclaimer: 'No endorsements. Educational content only.' })
+    })
+
+    // Placeholder organizations (no endorsements)
+    app.get('/community/orgs/placeholder', async (_req, reply) => {
+      const organizations = [
+        { id: 'nasasa', name: 'NASASA', category: 'stokvel_association', coverage: 'national', contact: { website: 'https://www.nasasa.co.za/' }, vetted: false, disclaimer: 'Placeholder; not vetted or endorsed.' },
+        { id: 'blacksash', name: 'Black Sash', category: 'consumer_protection', coverage: 'national', contact: { website: 'https://www.blacksash.org.za/' }, vetted: false, disclaimer: 'Placeholder; not vetted or endorsed.' },
+      ]
+      return reply.send({ organizations, disclaimer: 'Informational only. Verify independently.' })
+    })
+
+    // Debt renegotiation helper (template + channels)
+    const { RenegotiateRequestSchema, RenegotiateResponseSchema, DisputeRequestSchema, DisputeResponseSchema } = await import('@cyclebreaker/shared')
+    app.post('/debt/renegotiate', async (req, reply) => {
+      try {
+        const body = RenegotiateRequestSchema.parse(req.body || {})
+        const primary = 'sms'
+        const template = `Good day, due to hardship I propose ${body.proposed_terms.new_monthly_payment ? 'a new monthly payment of R' + body.proposed_terms.new_monthly_payment : 'adjusted terms'}. Kindly confirm.`
+        const resp = {
+          success: true,
+          lender_contact_channels: ['sms', 'email'],
+          template: { primary, fallback: ['email'] },
+          expected_response_time: 'Within 5 working days',
+          next_steps: ['Keep proof of messages', 'If no response, consider NCR complaint portal'],
+        }
+        return reply.send(resp)
+      } catch (e: any) {
+        req.log.error({ err: redactPII(e?.message || 'error') })
+        return reply.code(400).send({ error: 'VALIDATION_ERROR', details: redactPII(e?.message || 'invalid') })
+      }
+    })
+
+    // Dispute filing (link-out)
+    app.post('/debt/dispute', async (req, reply) => {
+      try {
+        const body = DisputeRequestSchema.parse(req.body || {})
+        const resp = {
+          status: 'filed',
+          advice: 'Prepare documents and submit complaint to NCR; consider Legal Aid if unresolved.',
+          resources: {
+            ncr_complaint_portal: 'https://www.ncr.org.za/consumers/complaints-and-disputes',
+            legal_aid_contact: 'https://www.legal-aid.org.za/',
+            debt_counselor_locator: 'https://www.ncr.org.za/consumers/debt-counselling/find-debt-counselor',
+          },
+        }
+        return reply.send(resp)
+      } catch (e: any) {
+        req.log.error({ err: redactPII(e?.message || 'error') })
+        return reply.code(400).send({ error: 'VALIDATION_ERROR', details: redactPII(e?.message || 'invalid') })
+      }
+    })
+  } catch (e: any) {
+    app.log.warn({ msg: 'Debt endpoints not available', err: e?.message })
+  }
+
   // Minimal profile endpoints (MVP)
   const CreateProfileBodySchema = z.object({}).passthrough()
   app.post('/profiles', async (req, reply) => {
@@ -71,8 +198,8 @@ export async function buildServer() {
   // AI onboarding (optional: returns 501 if key not configured)
   app.post('/profiles/sort', async (req, reply) => {
     try {
-      if (!process.env.DEEPSEEK_API_KEY) {
-        return reply.code(501).send({ error: 'AI onboarding disabled (missing DEEPSEEK_API_KEY)' })
+      if (!resolveSecret('NVIDIA_API_KEY') && !resolveSecret('UNLIMITED_API_KEYS') && !resolveSecret('UNLIMITED_API_KEY')) {
+        return reply.code(501).send({ error: 'AI onboarding disabled (configure NVIDIA_API_KEY or UNLIMITED_API_KEYS)' })
       }
       const body = (req.body ?? {}) as any
       const input = String(body.input || '')

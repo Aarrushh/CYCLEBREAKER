@@ -52,9 +52,9 @@ export default function AIOnboardingPage() {
 
   return (
     <main>
-      <div className="card">
-        <h2>AI-assisted onboarding</h2>
-        <p>Paste your situation or goals. We will create a structured profile (no sensitive data needed).</p>
+      <div className="bg-white border border-gray-200 rounded-lg p-4">
+        <h2 className="text-xl font-bold text-[color:var(--foreground)] mb-sm">AI-assisted onboarding</h2>
+        <p className="text-[color:var(--foreground)]/80 mb-sm">Paste your situation or goals. We will create a structured profile (no sensitive data needed).</p>
         <form onSubmit={onSuggest}>
           <textarea
             rows={8}
@@ -63,15 +63,15 @@ export default function AIOnboardingPage() {
             onChange={(e) => setInput(e.target.value)}
           />
           <div style={{ marginTop: 12 }}>
-            <button type="submit" disabled={loading || input.length < 10}>{loading ? 'Thinking…' : 'Suggest profile'}</button>
+            <button className="bg-[color:var(--primary)] text-white px-4 py-2 rounded-lg" type="submit" disabled={loading || input.length < 10}>{loading ? 'Thinking…' : 'Suggest profile'}</button>
           </div>
         </form>
         {error && <p style={{ color: '#ff6b6b' }}>{error}</p>}
         {result && (
-          <div className="card">
-            <h3>Suggested profile</h3>
-            <pre style={{ whiteSpace: 'pre-wrap' }}>{JSON.stringify(result, null, 2)}</pre>
-            <button onClick={useSuggested}>Use this and continue</button>
+          <div className="bg-white border border-gray-200 rounded-lg p-4 mt-md">
+            <h3 className="font-semibold text-[color:var(--foreground)] mb-sm">Suggested profile</h3>
+            <pre className="text-sm bg-gray-50 p-2 rounded" style={{ whiteSpace: 'pre-wrap' }}>{JSON.stringify(result, null, 2)}</pre>
+            <button className="mt-sm bg-[color:var(--primary)] text-white px-4 py-2 rounded-lg" onClick={useSuggested}>Use this and continue</button>
           </div>
         )}
       </div>

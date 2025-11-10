@@ -8,8 +8,7 @@
   "engines": {
     "node": ">=18.17"
   },
-  "overrides": {
-  },
+  "overrides": {},
   "scripts": {
     "dev": "concurrently -k --names api,web --prefix-colors blue,magenta \"npm:dev:api\" \"npm:dev:web\"",
     "dev:api": "cross-env NODE_ENV=development npm -w @cyclebreaker/api run dev",
@@ -25,5 +24,8 @@
     "@swc/helpers": "^0.5.17",
     "concurrently": "^8.2.2",
     "cross-env": "^7.0.3"
+  },
+  "dependencies": {
+    "ogl": "^1.0.11"
   }
 }

@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { UserProfileSchema, SA_PROVINCES } from "@cyclebreaker/shared"
 import { useState } from "react"
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000"
+import { getSupabase } from "../../lib/supabase"
 
 // Create a simplified schema for onboarding (without required id/timestamps)
 const OnboardingSchema = UserProfileSchema.omit({
@@ -39,27 +39,37 @@ export default function OnboardingPage() {
 
   async function onSubmit(values: z.infer<typeof OnboardingSchema>) {
     try {
-      if (API_BASE) {
-        const res = await fetch(`${API_BASE}/profiles`, {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify(values),
-        })
-        const data = await res.json()
-        if (!res.ok) {
-          alert(`Error: ${data?.error || "failed"}`)
-          return
-        }
-        setProfileId(data.id)
-        localStorage.setItem("cyclebreaker_profile_id", data.id)
+      const supabase = getSupabase()
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .insert([
+          {
+            location: values.location,
+            demographics: values.demographics,
+            economic: values.economic,
+            education_skills: (values as any).education_skills,
+            constraints: values.constraints,
+            goals: values.goals,
+            consent: values.consent,
+          },
+        ])
+        .select('id')
+        .single()
+
+      if (error) {
+        alert(`Error: ${error.message || 'failed'}`)
+        return
+      }
+
+      const id = data?.id
+      if (id) {
+        setProfileId(id)
+        localStorage.setItem('cyclebreaker_profile_id', id)
         setStep(3)
         return
       }
-      // Fallback: simulate profile creation client-side
-      const id = crypto.randomUUID()
-      setProfileId(id)
-      localStorage.setItem("cyclebreaker_profile_id", id)
-      setStep(3)
+
+      alert('Failed to create profile. Please try again.')
     } catch (error) {
       console.error('Profile creation failed:', error)
       alert('Failed to create profile. Please try again.')
@@ -69,14 +79,14 @@ export default function OnboardingPage() {
   if (step === 1) {
     return (
       <main className="max-w-md mx-auto p-6">
-        <div className="card">
-          <h1 className="text-2xl font-bold mb-6 text-center">Welcome to CycleBreaker SA</h1>
+        <div className="bg-white border border-gray-200 rounded-lg p-4">
+          <h1 className="text-2xl font-bold mb-6 text-center text-[color:var(--foreground)]">Welcome to CycleBreaker SA</h1>
           <p className="mb-4 text-center text-gray-600">
             Find grants, training, and job opportunities matched to your profile and location in South Africa.
           </p>
           <button 
             onClick={() => setStep(2)}
-            className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+            className="w-full bg-[color:var(--primary)] text-white py-3 px-4 rounded-lg hover:opacity-90 transition-colors"
           >
             Get Started
           </button>
@@ -88,7 +98,7 @@ export default function OnboardingPage() {
   if (step === 3) {
     return (
       <main className="max-w-md mx-auto p-6">
-        <div className="card">
+        <div className="bg-white border border-gray-200 rounded-lg p-4">
           <h2 className="text-xl font-bold mb-4 text-center text-green-600">Profile Created Successfully!</h2>
           <p className="mb-4 text-center">Your profile ID: <span className="font-mono text-sm">{profileId}</span></p>
           <a 
@@ -104,8 +114,8 @@ export default function OnboardingPage() {
 
   return (
     <main className="max-w-2xl mx-auto p-6">
-      <form className="card" onSubmit={handleSubmit(onSubmit)}>
-        <h2 className="text-xl font-bold mb-6">Tell us about yourself</h2>
+      <form className="bg-white border border-gray-200 rounded-lg p-4" onSubmit={handleSubmit(onSubmit)}>
+        <h2 className="text-xl font-bold mb-6 text-[color:var(--foreground)]">Tell us about yourself</h2>
 
         {/* Location */}
         <div className="mb-6">

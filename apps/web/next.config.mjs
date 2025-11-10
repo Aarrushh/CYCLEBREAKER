@@ -1,12 +1,18 @@
 import path from 'node:path'
+import withPWA from 'next-pwa'
+
 /** @type {import('next').NextConfig} */
-const nextConfig = {
+const baseConfig = {
   reactStrictMode: true,
-  // Ensure workspace packages are transpiled (TS/ESM) for the web app
   transpilePackages: ["@cyclebreaker/shared"],
-  // Force monorepo root for output tracing to avoid picking up external lockfiles
   outputFileTracingRoot: path.resolve(process.cwd(), '../../'),
 }
 
-export default nextConfig
+const nextConfig = withPWA({
+  dest: 'public',
+  disable: process.env.NODE_ENV === 'development',
+  register: true,
+  skipWaiting: true,
+})(baseConfig)
 
+export default nextConfig

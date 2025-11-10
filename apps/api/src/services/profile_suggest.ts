@@ -1,5 +1,6 @@
 import { z } from 'zod'
-import { deepseekChat } from '../clients/deepseek.js'
+import { nvidiaChat } from '../clients/nvidia.js'
+import { unlimitedChat } from '../clients/unlimited.js'
 import { UserProfileSchema, type UserProfile } from '@cyclebreaker/shared'
 
 const OutputSchema = UserProfileSchema
@@ -14,12 +15,21 @@ const SYSTEM_PROMPT = `You are a helpful assistant that converts free-text life 
 
 export async function suggestUserProfile(input: string): Promise<UserProfile> {
   const user = `Create a user profile JSON from this description.\n\nDescription:\n${input}\n\nReturn ONLY JSON. Do not include any extra text.`
-  const content = await deepseekChat([
-    { role: 'system', content: SYSTEM_PROMPT },
-    { role: 'user', content: user },
-  ], { response_format: 'json' })
+  let content: string | undefined
+  try {
+    content = await nvidiaChat([
+      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'user', content: user },
+    ], { model: process.env.NVIDIA_MODEL || 'meta/llama-3.1-70b-instruct' })
+  } catch {
+    content = await unlimitedChat([
+      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'user', content: user },
+    ], { model: process.env.UNLIMITED_MODEL || 'gpt-4o-mini' })
+  }
 
   // Some models return code fences; strip if present
+  if (!content) throw new Error('Model returned empty content')
   const jsonText = content.trim().replace(/^```json\s*|\s*```$/g, '')
   let parsed: unknown
   try {
