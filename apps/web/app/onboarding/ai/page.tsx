@@ -16,6 +16,7 @@ export default function AIOnboardingPage() {
     setError(null)
     setResult(null)
     try {
+      if (!API_BASE) throw new Error('API not configured')
       const res = await fetch(`${API_BASE}/profiles/sort`, {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -26,6 +27,10 @@ export default function AIOnboardingPage() {
       setResult(data.profile)
     } catch (e: any) {
       setError(e.message)
+      // queue error for later diagnostics
+      const q = JSON.parse(localStorage.getItem('cb_ai_error_queue') || '[]')
+      q.push({ ts: Date.now(), action: 'suggest', error: String(e?.message || e) })
+      localStorage.setItem('cb_ai_error_queue', JSON.stringify(q))
     } finally {
       setLoading(false)
     }
@@ -36,12 +41,18 @@ export default function AIOnboardingPage() {
     try {
       const id = (globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2)) as string
       localStorage.setItem('cyclebreaker_profile_id', id)
+      localStorage.setItem('cyclebreaker_profile_source', 'local')
+      localStorage.setItem('cb_profile_values', JSON.stringify(result))
       // If API exists, persist server-side as well (best-effort)
       if (API_BASE) {
         const values = { ...result }
         fetch(`${API_BASE}/profiles`, {
           method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(values),
-        }).catch(() => {})
+        }).catch((err) => {
+          const q = JSON.parse(localStorage.getItem('cb_ai_error_queue') || '[]')
+          q.push({ ts: Date.now(), action: 'save', error: String(err?.message || err) })
+          localStorage.setItem('cb_ai_error_queue', JSON.stringify(q))
+        })
       }
       window.location.href = '/feed'
     } catch (e: any) {

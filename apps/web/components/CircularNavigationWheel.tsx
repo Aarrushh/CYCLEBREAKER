@@ -38,7 +38,7 @@ export default function CircularNavigationWheel() {
                 fill={segment.color}
                 stroke="white"
                 strokeWidth="2"
-                className="cursor-pointer hover:opacity-80 focus:outline-none"
+                className="cursor-pointer hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[color:var(--accent)]"
                 onClick={() => router.push(segment.path)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {

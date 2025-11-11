@@ -66,6 +66,8 @@ export default function OnboardingPage() {
         if (id) {
           setProfileId(id)
           localStorage.setItem('cyclebreaker_profile_id', id)
+          localStorage.setItem('cyclebreaker_profile_source', 'supabase')
+          localStorage.setItem('cb_profile_values', JSON.stringify(values))
           setStep(3)
           return
         }
@@ -75,6 +77,8 @@ export default function OnboardingPage() {
       const id = (globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2)) as string
       setProfileId(id)
       localStorage.setItem('cyclebreaker_profile_id', id)
+      localStorage.setItem('cyclebreaker_profile_source', 'local')
+      localStorage.setItem('cb_profile_values', JSON.stringify(values))
       setStep(3)
     } catch (error: any) {
       console.error('Profile creation failed:', error)
@@ -82,6 +86,7 @@ export default function OnboardingPage() {
       const id = (globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2)) as string
       setProfileId(id)
       localStorage.setItem('cyclebreaker_profile_id', id)
+      localStorage.setItem('cyclebreaker_profile_source', 'local')
       setStep(3)
     }
   }
@@ -94,12 +99,20 @@ export default function OnboardingPage() {
           <p className="mb-4 text-center text-gray-600">
             Find grants, training, and job opportunities matched to your profile and location in South Africa.
           </p>
-          <button 
-            onClick={() => setStep(2)}
-            className="w-full bg-[color:var(--primary)] text-white py-3 px-4 rounded-lg hover:opacity-90 transition-colors"
-          >
-            Get Started
-          </button>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-sm">
+            <a 
+              href="/onboarding/ai"
+              className="w-full bg-[color:var(--primary)] text-white py-3 px-4 rounded-lg hover:opacity-90 text-center"
+            >
+              AI-assisted
+            </a>
+            <button 
+              onClick={() => setStep(2)}
+              className="w-full bg-gray-900 text-white py-3 px-4 rounded-lg hover:opacity-90"
+            >
+              Manual (on device)
+            </button>
+          </div>
         </div>
       </main>
     )

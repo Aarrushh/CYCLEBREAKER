@@ -7,6 +7,7 @@ import ModulesGrid from '@/components/ModulesGrid'
 
 export default function HomePage() {
   const [hasProfile, setHasProfile] = useState<boolean>(false)
+  const [lastModule, setLastModule] = useState<string | null>(null)
 
   useEffect(() => {
     try {
@@ -17,6 +18,7 @@ export default function HomePage() {
         return
       }
       setHasProfile(true)
+      setLastModule(localStorage.getItem('cb_last_module'))
     } catch {}
   }, [])
 
@@ -31,6 +33,9 @@ export default function HomePage() {
           <Link href="/onboarding" className="bg-[color:var(--primary)] text-white px-4 py-2 rounded-lg">Start Onboarding</Link>
           {hasProfile && (
             <Link href="/feed" className="bg-gray-900 text-white px-4 py-2 rounded-lg">View My Matches</Link>
+          )}
+          {lastModule && (
+            <Link href={lastModule} className="bg-[color:var(--accent)] text-white px-4 py-2 rounded-lg">Continue {lastModule.replace('/','')}</Link>
           )}
         </div>
       </section>

@@ -20,6 +20,9 @@ export default function ModulesGrid() {
           <Link
             key={m.id}
             href={m.path}
+            onClick={() => {
+              try { localStorage.setItem('cb_last_module', m.path) } catch {}
+            }}
             className="bg-white rounded-lg shadow-md p-md flex flex-col items-center justify-center gap-sm hover:shadow-lg transition-shadow"
             style={{ borderTop: `4px solid ${m.color}` }}
           >
