@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { nvidiaChat } from '../clients/nvidia.js'
+import { geminiChat } from '../clients/gemini.js'
 import { unlimitedChat } from '../clients/unlimited.js'
 import { UserProfileSchema, type UserProfile } from '@cyclebreaker/shared'
 
@@ -17,10 +17,10 @@ export async function suggestUserProfile(input: string): Promise<UserProfile> {
   const user = `Create a user profile JSON from this description.\n\nDescription:\n${input}\n\nReturn ONLY JSON. Do not include any extra text.`
   let content: string | undefined
   try {
-    content = await nvidiaChat([
+    content = await geminiChat([
       { role: 'system', content: SYSTEM_PROMPT },
       { role: 'user', content: user },
-    ], { model: process.env.NVIDIA_MODEL || 'meta/llama-3.1-70b-instruct' })
+    ], { model: process.env.GEMINI_MODEL || 'gemini-1.5-flash' })
   } catch {
     content = await unlimitedChat([
       { role: 'system', content: SYSTEM_PROMPT },

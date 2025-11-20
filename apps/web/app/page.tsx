@@ -19,23 +19,33 @@ export default function HomePage() {
       }
       setHasProfile(true)
       setLastModule(localStorage.getItem('cb_last_module'))
-    } catch {}
+    } catch { }
   }, [])
 
   return (
     <div className="container mx-auto px-md py-lg">
-      <section className="text-center mb-2xl">
-        <h1 className="text-3xl sm:text-4xl font-bold text-[color:var(--foreground)] mb-sm">CycleBreaker</h1>
-        <p className="text-lg text-[color:var(--foreground)]/80 mb-lg">
-          Find grants, training, services and jobs aligned to your situation.
+      <section className="text-center mb-2xl pt-xl">
+        <div className="inline-block p-1 rounded-full bg-gradient-to-r from-[color:var(--primary)] to-[color:var(--accent)] mb-md">
+          <div className="bg-white rounded-full px-4 py-1 text-xs font-bold uppercase tracking-wider">
+            Beta v0.1
+          </div>
+        </div>
+        <h1 className="text-4xl sm:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[color:var(--primary)] to-[color:var(--accent)] mb-sm drop-shadow-sm">
+          CycleBreaker
+        </h1>
+        <p className="text-xl text-[color:var(--foreground)]/80 mb-xl max-w-2xl mx-auto leading-relaxed">
+          Breaking the cycle of poverty through <span className="font-bold text-[color:var(--primary)]">opportunity</span>.
+          Find grants, jobs, and training matched to you.
         </p>
-        <div className="flex items-center justify-center gap-sm">
-          <Link href="/onboarding" className="bg-[color:var(--primary)] text-white px-4 py-2 rounded-lg">Start Onboarding</Link>
+
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-md">
+          <Link href="/onboarding" className="w-full sm:w-auto bg-gradient-to-r from-[color:var(--primary)] to-[color:var(--success)] text-white px-8 py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1">
+            Start Onboarding
+          </Link>
           {hasProfile && (
-            <Link href="/feed" className="bg-gray-900 text-white px-4 py-2 rounded-lg">View My Matches</Link>
-          )}
-          {lastModule && (
-            <Link href={lastModule} className="bg-[color:var(--accent)] text-white px-4 py-2 rounded-lg">Continue {lastModule.replace('/','')}</Link>
+            <Link href="/feed" className="w-full sm:w-auto glass text-[color:var(--foreground)] px-8 py-4 rounded-xl font-bold hover:bg-white/50 transition-all">
+              View Matches
+            </Link>
           )}
         </div>
       </section>

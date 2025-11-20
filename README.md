@@ -1,4 +1,13 @@
-# CYCLEBREAKER — Simple, explainable opportunity finder (SA-first)
+# CYCLEBREAKER
+
+**Empowering low-resource users through a Hybrid AI mobile app targeting the poverty cycle.**
+
+CycleBreaker leverages a unique **Hybrid AI** architecture:
+- **Local AI:** Lightweight, offline-capable models (e.g., TinyLlama) on the user's device for privacy and basic interaction.
+- **Server AI:** Powerful cloud agents orchestrated via n8n for heavy lifting, job matching, and personalized insights.
+
+This approach minimizes data usage while maximizing capability for users with unreliable internet access.
+
 
 CycleBreaker helps people in South Africa find relevant grants, jobs, and training using a lightweight PWA and simple, explainable matching. MVP is privacy-first (minimal PII), deterministic, and fast to run on low-end devices.
 

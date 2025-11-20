@@ -1,0 +1,1393 @@
+{
+    "module": "SAVINGS",
+    "main_model_ref": "CYCLEBREAKER Hybrid AI App model (2025-11-20)",
+    "version": "1.0.0",
+    "last_updated": "2025-11-20",
+    "purpose": "Typed, low-bandwidth client-server prompts and schemas for the Savings module, covering local (offline) intent classification, server workflow orchestration, and developer-facing prompts.",
+    "constants": {
+        "currency": "ZAR",
+        "minor_unit": "cents",
+        "timezone": "Africa/Johannesburg",
+        "locales": [
+            "en-ZA"
+        ],
+        "date_format": "YYYY-MM-DD",
+        "semver_policy": "MAJOR.MINOR.PATCH"
+    },
+    "rate_limit_policy": {
+        "per_user_per_day_max_calls": 20,
+        "burst_window_seconds": 60,
+        "burst_max_calls": 3,
+        "offline_queue_max": 50,
+        "backoff_seconds": [
+            15,
+            60,
+            300
+        ]
+    },
+    "envelope_schema": {
+        "name": "Envelope",
+        "type": "object",
+        "required": [
+            "user_id_hash",
+            "session_id",
+            "intent",
+            "locale",
+            "tz",
+            "ts",
+            "app_ver",
+            "pull_count_today",
+            "payload"
+        ],
+        "properties": {
+            "user_id_hash": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$",
+                "description": "SHA-256 hex of locally salted user identifier"
+            },
+            "session_id": {
+                "type": "string",
+                "format": "uuid"
+            },
+            "intent": {
+                "type": "string",
+                "enum_ref": "intents[*].code"
+            },
+            "locale": {
+                "type": "string",
+                "enum": [
+                    "en-ZA"
+                ]
+            },
+            "tz": {
+                "type": "string",
+                "const": "Africa/Johannesburg"
+            },
+            "ts": {
+                "type": "string",
+                "format": "date-time"
+            },
+            "app_ver": {
+                "type": "string",
+                "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+            },
+            "device_caps": {
+                "type": "object",
+                "properties": {
+                    "ram_mb": {
+                        "type": "integer",
+                        "minimum": 256,
+                        "maximum": 8192
+                    },
+                    "network": {
+                        "type": "string",
+                        "enum": [
+                            "offline",
+                            "2g",
+                            "3g",
+                            "4g",
+                            "wifi"
+                        ]
+                    }
+                },
+                "additionalProperties": false
+            },
+            "pull_count_today": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 200
+            },
+            "offline_seq": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Monotonic counter for offline ordering"
+            },
+            "payload": {
+                "type_ref": "per-intent schema"
+            }
+        },
+        "additionalProperties": false
+    },
+    "schemas": {
+        "Money": {
+            "type": "object",
+            "required": [
+                "amount_cents"
+            ],
+            "properties": {
+                "amount_cents": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 1000000000
+                }
+            },
+            "additionalProperties": false
+        },
+        "Goal": {
+            "type": "object",
+            "required": [
+                "name",
+                "target_cents",
+                "target_date",
+                "priority",
+                "category"
+            ],
+            "properties": {
+                "goal_id": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{16,}$"
+                },
+                "name": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 60
+                },
+                "target_cents": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 200000000
+                },
+                "target_date": {
+                    "type": "string",
+                    "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+                },
+                "priority": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 5
+                },
+                "category": {
+                    "type": "string",
+                    "enum": [
+                        "emergency",
+                        "education",
+                        "housing",
+                        "health",
+                        "business",
+                        "other"
+                    ]
+                },
+                "notes": {
+                    "type": "string",
+                    "maxLength": 140
+                }
+            },
+            "additionalProperties": false
+        },
+        "Contribution": {
+            "type": "object",
+            "required": [
+                "goal_id",
+                "amount_cents",
+                "date"
+            ],
+            "properties": {
+                "contrib_id": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{16,}$"
+                },
+                "goal_id": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{16,}$"
+                },
+                "amount_cents": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 200000000
+                },
+                "date": {
+                    "type": "string",
+                    "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+                },
+                "source": {
+                    "type": "string",
+                    "enum": [
+                        "cash",
+                        "mobile_wallet",
+                        "bank",
+                        "other"
+                    ]
+                },
+                "note": {
+                    "type": "string",
+                    "maxLength": 80
+                }
+            },
+            "additionalProperties": false
+        },
+        "PlanSuggestion": {
+            "type": "object",
+            "required": [
+                "cadence",
+                "suggested_cents_per_period"
+            ],
+            "properties": {
+                "cadence": {
+                    "type": "string",
+                    "enum": [
+                        "daily",
+                        "weekly",
+                        "biweekly",
+                        "monthly"
+                    ]
+                },
+                "suggested_cents_per_period": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100000000
+                },
+                "rationale": {
+                    "type": "string",
+                    "maxLength": 200
+                }
+            },
+            "additionalProperties": false
+        },
+        "BudgetFrame": {
+            "type": "object",
+            "required": [
+                "period",
+                "income_cents",
+                "expense_items"
+            ],
+            "properties": {
+                "period": {
+                    "type": "string",
+                    "enum": [
+                        "weekly",
+                        "monthly"
+                    ]
+                },
+                "income_cents": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 200000000
+                },
+                "expense_items": {
+                    "type": "array",
+                    "minItems": 0,
+                    "maxItems": 40,
+                    "items": {
+                        "type": "object",
+                        "required": [
+                            "name",
+                            "amount_cents"
+                        ],
+                        "properties": {
+                            "name": {
+                                "type": "string",
+                                "minLength": 2,
+                                "maxLength": 40
+                            },
+                            "amount_cents": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 200000000
+                            },
+                            "category": {
+                                "type": "string",
+                                "enum": [
+                                    "food",
+                                    "transport",
+                                    "rent",
+                                    "utilities",
+                                    "data",
+                                    "debt",
+                                    "education",
+                                    "health",
+                                    "other"
+                                ]
+                            }
+                        },
+                        "additionalProperties": false
+                    }
+                }
+            },
+            "additionalProperties": false
+        },
+        "Offer": {
+            "type": "object",
+            "required": [
+                "type",
+                "apr_percent",
+                "term_days",
+                "fees_cents"
+            ],
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "loan",
+                        "savings_product",
+                        "other"
+                    ]
+                },
+                "apr_percent": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 500
+                },
+                "term_days": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 3650
+                },
+                "fees_cents": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 200000000
+                }
+            },
+            "additionalProperties": false
+        },
+        "Group": {
+            "type": "object",
+            "required": [
+                "name",
+                "member_cap"
+            ],
+            "properties": {
+                "group_id": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{16,}$"
+                },
+                "name": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 40
+                },
+                "member_cap": {
+                    "type": "integer",
+                    "minimum": 2,
+                    "maximum": 50
+                },
+                "rules": {
+                    "type": "string",
+                    "maxLength": 300
+                }
+            },
+            "additionalProperties": false
+        },
+        "AlertPrefs": {
+            "type": "object",
+            "required": [
+                "enabled"
+            ],
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "cadence": {
+                    "type": "string",
+                    "enum": [
+                        "off",
+                        "daily",
+                        "weekly",
+                        "monthly"
+                    ]
+                },
+                "quiet_hours": {
+                    "type": "string",
+                    "pattern": "^[0-2][0-9]:[0-5][0-9]-[0-2][0-9]:[0-5][0-9]$"
+                }
+            },
+            "additionalProperties": false
+        },
+        "Summary": {
+            "type": "object",
+            "required": [
+                "goals",
+                "total_saved_cents"
+            ],
+            "properties": {
+                "goals": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "required": [
+                            "goal_id",
+                            "name",
+                            "target_cents",
+                            "saved_cents",
+                            "pct_done",
+                            "eta_date"
+                        ],
+                        "properties": {
+                            "goal_id": {
+                                "type": "string"
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "target_cents": {
+                                "type": "integer"
+                            },
+                            "saved_cents": {
+                                "type": "integer"
+                            },
+                            "pct_done": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 100
+                            },
+                            "eta_date": {
+                                "type": "string",
+                                "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+                            }
+                        },
+                        "additionalProperties": false
+                    }
+                },
+                "total_saved_cents": {
+                    "type": "integer"
+                }
+            },
+            "additionalProperties": false
+        }
+    },
+    "intents": [
+        {
+            "code": "SAV_GOAL_CREATE",
+            "payload_schema_ref": "Goal",
+            "response_schema_ref": "Goal",
+            "server_required": true,
+            "description": "Create a new savings goal and derive plan."
+        },
+        {
+            "code": "SAV_GOAL_UPDATE",
+            "payload_schema_ref": "Goal",
+            "response_schema_ref": "Goal",
+            "server_required": true,
+            "description": "Update fields of an existing goal."
+        },
+        {
+            "code": "SAV_GOAL_STATUS",
+            "payload_schema_ref": "Goal",
+            "response_schema_ref": "Summary",
+            "server_required": false,
+            "description": "Summarize progress for one or all goals."
+        },
+        {
+            "code": "SAV_CONTRIBUTION_LOG",
+            "payload_schema_ref": "Contribution",
+            "response_schema_ref": "Summary",
+            "server_required": false,
+            "description": "Log local contribution; sync later if needed."
+        },
+        {
+            "code": "SAV_PLAN_SUGGEST",
+            "payload_schema_ref": "PlanSuggestion",
+            "response_schema_ref": "PlanSuggestion",
+            "server_required": true,
+            "description": "Suggest cadence and amount."
+        },
+        {
+            "code": "SAV_BUDGET_SEGMENT",
+            "payload_schema_ref": "BudgetFrame",
+            "response_schema_ref": "PlanSuggestion",
+            "server_required": true,
+            "description": "Compute feasible savings from budget."
+        },
+        {
+            "code": "SAV_OFFER_ASSESS",
+            "payload_schema_ref": "Offer",
+            "response_schema_ref": "PlanSuggestion",
+            "server_required": true,
+            "description": "Risk/affordability check; return guidance."
+        },
+        {
+            "code": "SAV_GROUP_CREATE",
+            "payload_schema_ref": "Group",
+            "response_schema_ref": "Group",
+            "server_required": true,
+            "description": "Create a community savings group (no payments)."
+        },
+        {
+            "code": "SAV_GROUP_JOIN",
+            "payload_schema_ref": "Group",
+            "response_schema_ref": "Group",
+            "server_required": true,
+            "description": "Join an existing group by code/invite."
+        },
+        {
+            "code": "SAV_ALERT_SET",
+            "payload_schema_ref": "AlertPrefs",
+            "response_schema_ref": "AlertPrefs",
+            "server_required": false,
+            "description": "Set local reminder preferences."
+        },
+        {
+            "code": "SAV_EXPORT_SUMMARY",
+            "payload_schema_ref": "Summary",
+            "response_schema_ref": "Summary",
+            "server_required": false,
+            "description": "Generate shareable summary locally."
+        }
+    ],
+    "client_local_ai": {
+        "classifier": {
+            "type": "rule+fewshot",
+            "routing_table": [
+                {
+                    "intent": "SAV_GOAL_CREATE",
+                    "keywords_any": [
+                        "start goal",
+                        "new goal",
+                        "save for",
+                        "target",
+                        "plan for"
+                    ]
+                },
+                {
+                    "intent": "SAV_GOAL_UPDATE",
+                    "keywords_any": [
+                        "rename",
+                        "change date",
+                        "change amount",
+                        "update goal"
+                    ]
+                },
+                {
+                    "intent": "SAV_GOAL_STATUS",
+                    "keywords_any": [
+                        "how much saved",
+                        "progress",
+                        "status",
+                        "summary"
+                    ]
+                },
+                {
+                    "intent": "SAV_CONTRIBUTION_LOG",
+                    "keywords_any": [
+                        "I saved",
+                        "add contribution",
+                        "log",
+                        "put aside"
+                    ]
+                },
+                {
+                    "intent": "SAV_PLAN_SUGGEST",
+                    "keywords_any": [
+                        "how much should I save",
+                        "suggest plan",
+                        "what can I afford"
+                    ]
+                },
+                {
+                    "intent": "SAV_BUDGET_SEGMENT",
+                    "keywords_any": [
+                        "budget",
+                        "expenses",
+                        "income",
+                        "leftover"
+                    ]
+                },
+                {
+                    "intent": "SAV_OFFER_ASSESS",
+                    "keywords_any": [
+                        "loan",
+                        "offer",
+                        "APR",
+                        "fees",
+                        "interest"
+                    ]
+                },
+                {
+                    "intent": "SAV_GROUP_CREATE",
+                    "keywords_any": [
+                        "create group",
+                        "start group",
+                        "community saving"
+                    ]
+                },
+                {
+                    "intent": "SAV_GROUP_JOIN",
+                    "keywords_any": [
+                        "join group",
+                        "invite code"
+                    ]
+                },
+                {
+                    "intent": "SAV_ALERT_SET",
+                    "keywords_any": [
+                        "reminder",
+                        "alert",
+                        "notification"
+                    ]
+                },
+                {
+                    "intent": "SAV_EXPORT_SUMMARY",
+                    "keywords_any": [
+                        "export",
+                        "share",
+                        "pdf",
+                        "summary"
+                    ]
+                }
+            ],
+            "few_shot": [
+                {
+                    "user": "I want to save for school fees next year",
+                    "intent": "SAV_GOAL_CREATE"
+                },
+                {
+                    "user": "I added R50 today to my business fund",
+                    "intent": "SAV_CONTRIBUTION_LOG"
+                },
+                {
+                    "user": "What is my progress for the emergency fund?",
+                    "intent": "SAV_GOAL_STATUS"
+                }
+            ],
+            "postprocess": {
+                "fallback_intent": "SAV_GOAL_STATUS",
+                "confidence_threshold": 0.35
+            }
+        },
+        "envelope_builder": {
+            "defaults": {
+                "locale": "en-ZA",
+                "tz": "Africa/Johannesburg"
+            },
+            "rules": [
+                "Use integer cents; strip currency symbols.",
+                "Truncate free-text notes to max 80 chars.",
+                "When offline: increment offline_seq and enqueue; do not drop."
+            ]
+        },
+        "offline_behaviour": {
+            "local_only_intents": [
+                "SAV_GOAL_STATUS",
+                "SAV_CONTRIBUTION_LOG",
+                "SAV_ALERT_SET",
+                "SAV_EXPORT_SUMMARY"
+            ],
+            "cache_keys": [
+                "goalsById",
+                "contribByGoal",
+                "summary"
+            ],
+            "merge_strategy": "CRDT-lastwrite-ts"
+        }
+    },
+    "server_agents": [
+        {
+            "id": "SavingsGoalAgent",
+            "triggers": [
+                "SAV_GOAL_CREATE",
+                "SAV_GOAL_UPDATE"
+            ],
+            "input_schema_ref": "Goal",
+            "output_schema_ref": "Goal",
+            "instructions": {
+                "objective": "Validate goal fields, normalize plan, set milestones.",
+                "invariants": [
+                    "Never invent payments; module logs only.",
+                    "Use ZAR cents; no floating point."
+                ],
+                "steps": [
+                    "Validate schema; reject over limits.",
+                    "Normalize target_date; if missing, estimate from cadence if provided.",
+                    "Attach default PlanSuggestion if none provided."
+                ]
+            }
+        },
+        {
+            "id": "PlanSuggestAgent",
+            "triggers": [
+                "SAV_PLAN_SUGGEST",
+                "SAV_BUDGET_SEGMENT"
+            ],
+            "input_schema_ref": "BudgetFrame",
+            "output_schema_ref": "PlanSuggestion",
+            "instructions": {
+                "objective": "Recommend feasible cadence and amount with brief rationale.",
+                "rules": [
+                    "Savings <= 20% of income by default; adjust to leave >= 10% buffer.",
+                    "Prefer weekly recommendations for irregular income."
+                ]
+            }
+        },
+        {
+            "id": "RiskGuardAgent",
+            "triggers": [
+                "SAV_OFFER_ASSESS"
+            ],
+            "input_schema_ref": "Offer",
+            "output_schema_ref": "PlanSuggestion",
+            "instructions": {
+                "objective": "Flag risky offers and propose safer savings-first guidance.",
+                "outputs": [
+                    "suggested_cents_per_period=0 when avoiding offer",
+                    "rationale capped at 200 chars"
+                ]
+            }
+        },
+        {
+            "id": "GroupAgent",
+            "triggers": [
+                "SAV_GROUP_CREATE",
+                "SAV_GROUP_JOIN"
+            ],
+            "input_schema_ref": "Group",
+            "output_schema_ref": "Group",
+            "instructions": {
+                "objective": "Non-monetary group management scaffold only.",
+                "rules": [
+                    "No funds movement or balances.",
+                    "Provide text rules template if missing (<=300 chars)."
+                ]
+            }
+        }
+    ],
+    "function_signatures": [
+        {
+            "name": "savings.create_goal",
+            "intent": "SAV_GOAL_CREATE",
+            "params_schema_ref": "Goal",
+            "returns_schema_ref": "Goal"
+        },
+        {
+            "name": "savings.update_goal",
+            "intent": "SAV_GOAL_UPDATE",
+            "params_schema_ref": "Goal",
+            "returns_schema_ref": "Goal"
+        },
+        {
+            "name": "savings.log_contribution_local",
+            "intent": "SAV_CONTRIBUTION_LOG",
+            "params_schema_ref": "Contribution",
+            "returns_schema_ref": "Summary"
+        },
+        {
+            "name": "savings.plan_suggest",
+            "intent": "SAV_PLAN_SUGGEST",
+            "params_schema_ref": "BudgetFrame",
+            "returns_schema_ref": "PlanSuggestion"
+        },
+        {
+            "name": "savings.budget_segment",
+            "intent": "SAV_BUDGET_SEGMENT",
+            "params_schema_ref": "BudgetFrame",
+            "returns_schema_ref": "PlanSuggestion"
+        },
+        {
+            "name": "savings.offer_assess",
+            "intent": "SAV_OFFER_ASSESS",
+            "params_schema_ref": "Offer",
+            "returns_schema_ref": "PlanSuggestion"
+        },
+        {
+            "name": "savings.group.create",
+            "intent": "SAV_GROUP_CREATE",
+            "params_schema_ref": "Group",
+            "returns_schema_ref": "Group"
+        },
+        {
+            "name": "savings.group.join",
+            "intent": "SAV_GROUP_JOIN",
+            "params_schema_ref": "Group",
+            "returns_schema_ref": "Group"
+        }
+    ],
+    "n8n_workflow": {
+        "name": "SavingsModuleRouter",
+        "nodes": [
+            {
+                "id": "webhook_in",
+                "type": "Webhook",
+                "config": {
+                    "path": "/api/savings",
+                    "methods": [
+                        "POST"
+                    ]
+                },
+                "out": [
+                    "validate_json"
+                ]
+            },
+            {
+                "id": "validate_json",
+                "type": "JSON Schema Validate",
+                "config": {
+                    "schema_ref": "Envelope"
+                },
+                "out": [
+                    "rate_limit"
+                ]
+            },
+            {
+                "id": "rate_limit",
+                "type": "Rate Limit",
+                "config": {
+                    "window_sec": 86400,
+                    "limit": 20,
+                    "key": "{{user_id_hash}}"
+                },
+                "out": [
+                    "switch_intent"
+                ],
+                "on_error": "respond_rate_limited"
+            },
+            {
+                "id": "switch_intent",
+                "type": "Switch",
+                "config": {
+                    "key": "intent",
+                    "cases": [
+                        "SAV_GOAL_CREATE",
+                        "SAV_GOAL_UPDATE",
+                        "SAV_PLAN_SUGGEST",
+                        "SAV_BUDGET_SEGMENT",
+                        "SAV_OFFER_ASSESS",
+                        "SAV_GROUP_CREATE",
+                        "SAV_GROUP_JOIN"
+                    ]
+                },
+                "out": {
+                    "SAV_GOAL_CREATE": [
+                        "agent_goal"
+                    ],
+                    "SAV_GOAL_UPDATE": [
+                        "agent_goal"
+                    ],
+                    "SAV_PLAN_SUGGEST": [
+                        "agent_plan"
+                    ],
+                    "SAV_BUDGET_SEGMENT": [
+                        "agent_plan"
+                    ],
+                    "SAV_OFFER_ASSESS": [
+                        "agent_risk"
+                    ],
+                    "SAV_GROUP_CREATE": [
+                        "agent_group"
+                    ],
+                    "SAV_GROUP_JOIN": [
+                        "agent_group"
+                    ],
+                    "default": [
+                        "respond_passthrough"
+                    ]
+                }
+            },
+            {
+                "id": "agent_goal",
+                "type": "Function/LLM",
+                "config": {
+                    "agent_id": "SavingsGoalAgent",
+                    "input_schema_ref": "Goal",
+                    "output_schema_ref": "Goal"
+                },
+                "out": [
+                    "respond_ok"
+                ]
+            },
+            {
+                "id": "agent_plan",
+                "type": "Function/LLM",
+                "config": {
+                    "agent_id": "PlanSuggestAgent",
+                    "input_schema_ref": "BudgetFrame",
+                    "output_schema_ref": "PlanSuggestion"
+                },
+                "out": [
+                    "respond_ok"
+                ]
+            },
+            {
+                "id": "agent_risk",
+                "type": "Function/LLM",
+                "config": {
+                    "agent_id": "RiskGuardAgent",
+                    "input_schema_ref": "Offer",
+                    "output_schema_ref": "PlanSuggestion"
+                },
+                "out": [
+                    "respond_ok"
+                ]
+            },
+            {
+                "id": "agent_group",
+                "type": "Function/LLM",
+                "config": {
+                    "agent_id": "GroupAgent",
+                    "input_schema_ref": "Group",
+                    "output_schema_ref": "Group"
+                },
+                "out": [
+                    "respond_ok"
+                ]
+            },
+            {
+                "id": "respond_ok",
+                "type": "HTTP Response",
+                "config": {
+                    "status": 200,
+                    "body": "{{agent_output_json}}"
+                }
+            },
+            {
+                "id": "respond_passthrough",
+                "type": "HTTP Response",
+                "config": {
+                    "status": 200,
+                    "body": "{{payload}}"
+                }
+            },
+            {
+                "id": "respond_rate_limited",
+                "type": "HTTP Response",
+                "config": {
+                    "status": 429,
+                    "body": {
+                        "error": "E_RATE_LIMIT",
+                        "retry_after_sec": 3600
+                    }
+                }
+            }
+        ]
+    },
+    "rpo": {
+        "SAV_GOAL_CREATE": {
+            "role": "SavingsGoalAgent",
+            "process": [
+                "Validate",
+                "Normalize plan",
+                "Set milestones",
+                "Return goal object"
+            ],
+            "outcome": [
+                "Goal object with plan-ready fields"
+            ]
+        },
+        "SAV_PLAN_SUGGEST": {
+            "role": "PlanSuggestAgent",
+            "process": [
+                "Check budget frame",
+                "Compute safe savings amount",
+                "Select cadence",
+                "Explain in <=200 chars"
+            ],
+            "outcome": [
+                "PlanSuggestion struct"
+            ]
+        },
+        "SAV_OFFER_ASSESS": {
+            "role": "RiskGuardAgent",
+            "process": [
+                "Evaluate APR+fees vs periods",
+                "Flag risk",
+                "Suggest savings-first alternative"
+            ],
+            "outcome": [
+                "PlanSuggestion with rationale"
+            ]
+        },
+        "SAV_GROUP_CREATE": {
+            "role": "GroupAgent",
+            "process": [
+                "Validate name and cap",
+                "Create group scaffold",
+                "Attach rules template"
+            ],
+            "outcome": [
+                "Group struct with group_id"
+            ]
+        }
+    },
+    "error_codes": [
+        {
+            "code": "E_RATE_LIMIT",
+            "http": 429,
+            "message": "Daily request limit reached"
+        },
+        {
+            "code": "E_SCHEMA",
+            "http": 400,
+            "message": "Payload failed schema validation"
+        },
+        {
+            "code": "E_NOT_FOUND",
+            "http": 404,
+            "message": "Referenced entity not found"
+        },
+        {
+            "code": "E_SERVER",
+            "http": 500,
+            "message": "Unexpected server error"
+        }
+    ],
+    "dev_specs": {
+        "ui_contracts": {
+            "routes": [
+                "/savings",
+                "/savings/[goalId]"
+            ],
+            "components": [
+                {
+                    "name": "GoalCard",
+                    "props": [
+                        "name",
+                        "target_cents",
+                        "saved_cents",
+                        "pct_done",
+                        "eta_date"
+                    ]
+                },
+                {
+                    "name": "ContributionForm",
+                    "props": [
+                        "goal_id"
+                    ]
+                },
+                {
+                    "name": "PlanSuggestSheet",
+                    "props": [
+                        "suggested_cents_per_period",
+                        "cadence",
+                        "rationale"
+                    ]
+                }
+            ]
+        },
+        "state_store": {
+            "lib": "zustand",
+            "shape": {
+                "goalsById": "Record<string, Goal>",
+                "contribByGoal": "Record<string, Contribution[]>",
+                "summary": "Summary",
+                "alerts": "AlertPrefs",
+                "offlineQueue": "Envelope[]"
+            },
+            "actions": [
+                "createGoal(envelope)",
+                "updateGoal(envelope)",
+                "logContribution(envelope)",
+                "syncOutbox()",
+                "applyServerResponse(envelope, data)"
+            ]
+        },
+        "indexeddb": {
+            "db_name": "cyclebreaker",
+            "stores": [
+                {
+                    "name": "goals",
+                    "key": "goal_id",
+                    "indexes": [
+                        "name",
+                        "target_date"
+                    ]
+                },
+                {
+                    "name": "contrib",
+                    "key": "contrib_id",
+                    "indexes": [
+                        "goal_id",
+                        "date"
+                    ]
+                },
+                {
+                    "name": "cache",
+                    "key": "key",
+                    "indexes": [
+                        "ts"
+                    ]
+                },
+                {
+                    "name": "outbox",
+                    "key": "offline_seq",
+                    "indexes": [
+                        "intent"
+                    ]
+                }
+            ]
+        },
+        "api_contract": {
+            "endpoint": "/api/savings",
+            "method": "POST",
+            "request_schema_ref": "Envelope",
+            "response": {
+                "on_200": {
+                    "type": "object",
+                    "properties": {
+                        "data": {
+                            "type": "object"
+                        }
+                    },
+                    "additionalProperties": true
+                },
+                "on_4xx_5xx": {
+                    "type": "object",
+                    "properties": {
+                        "error": {
+                            "type": "string"
+                        }
+                    },
+                    "additionalProperties": true
+                }
+            }
+        },
+        "validation": {
+            "library_suggestion": "zod",
+            "zod_invariants": [
+                "no floats for money",
+                "max string lengths",
+                "enum validation for categories"
+            ]
+        },
+        "a11y_perf": {
+            "wcag": "2.1 AA",
+            "low_data": [
+                "lazy-load images",
+                "cache JSON responses",
+                "minify prompts"
+            ],
+            "animations": [
+                "micro-interactions only; prefer CSS over JS"
+            ]
+        }
+    },
+    "prompts": {
+        "local_ai_prompts": [
+            {
+                "id": "classify_intent",
+                "role": "router",
+                "style": "deterministic",
+                "inputs": [
+                    "user_text"
+                ],
+                "output": {
+                    "type": "object",
+                    "properties": {
+                        "intent": {
+                            "type": "string"
+                        },
+                        "confidence": {
+                            "type": "number"
+                        }
+                    },
+                    "required": [
+                        "intent",
+                        "confidence"
+                    ]
+                },
+                "instructions": [
+                    "Map user_text to one intent from intents[].code.",
+                    "If uncertain, return SAV_GOAL_STATUS with confidence<=0.35."
+                ]
+            },
+            {
+                "id": "build_envelope",
+                "role": "packer",
+                "inputs": [
+                    "intent",
+                    "payload_partial",
+                    "context"
+                ],
+                "output": {
+                    "schema_ref": "Envelope"
+                },
+                "instructions": [
+                    "Convert currency to integer cents.",
+                    "Clip strings to schema maxLength.",
+                    "Attach offline_seq when offline."
+                ]
+            }
+        ],
+        "server_agent_prompts": [
+            {
+                "id": "SavingsGoalAgent_prompt",
+                "role": "specialist",
+                "input_schema_ref": "Goal",
+                "output_schema_ref": "Goal",
+                "guardrails": [
+                    "Never suggest or infer real transactions.",
+                    "Keep notes <=140 chars; sanitize."
+                ],
+                "decision_points": [
+                    "Feasible target vs date",
+                    "Priority normalization 1..5"
+                ]
+            },
+            {
+                "id": "PlanSuggestAgent_prompt",
+                "role": "planner",
+                "input_schema_ref": "BudgetFrame",
+                "output_schema_ref": "PlanSuggestion",
+                "guardrails": [
+                    "Use <=20% income default; ensure leftover >=10%.",
+                    "Prefer weekly cadence for variable income."
+                ]
+            },
+            {
+                "id": "RiskGuardAgent_prompt",
+                "role": "risk",
+                "input_schema_ref": "Offer",
+                "output_schema_ref": "PlanSuggestion",
+                "guardrails": [
+                    "If APR>50 or fees high relative to term, advise caution.",
+                    "Return suggested_cents_per_period=0 when avoidance recommended."
+                ]
+            },
+            {
+                "id": "GroupAgent_prompt",
+                "role": "group_admin",
+                "input_schema_ref": "Group",
+                "output_schema_ref": "Group",
+                "guardrails": [
+                    "No balances or payment features.",
+                    "Member cap 2..50; trim rules template."
+                ]
+            }
+        ],
+        "dev_prompts": [
+            {
+                "id": "generate_zod_schemas",
+                "purpose": "Create zod schemas mirroring module schemas.",
+                "inputs": [
+                    "schemas"
+                ],
+                "expected_output": {
+                    "file_suggestions": [
+                        "src/lib/savings/schemas.ts"
+                    ],
+                    "exports": [
+                        "ZGoal",
+                        "ZContribution",
+                        "ZBudgetFrame",
+                        "ZPlanSuggestion",
+                        "ZAlertPrefs",
+                        "ZEnvelope"
+                    ]
+                }
+            },
+            {
+                "id": "create_zustand_store",
+                "purpose": "Generate lightweight store for offline-first savings.",
+                "inputs": [
+                    "state_store"
+                ],
+                "expected_output": {
+                    "file_suggestions": [
+                        "src/lib/savings/store.ts"
+                    ],
+                    "api": [
+                        "createGoal",
+                        "updateGoal",
+                        "logContribution",
+                        "syncOutbox",
+                        "applyServerResponse"
+                    ]
+                }
+            },
+            {
+                "id": "build_api_route",
+                "purpose": "Implement Next.js 15 route handler for /api/savings with schema validation and rate limiting stub.",
+                "inputs": [
+                    "api_contract",
+                    "rate_limit_policy"
+                ],
+                "expected_output": {
+                    "file_suggestions": [
+                        "src/app/api/savings/route.ts"
+                    ],
+                    "behaviour": [
+                        "validate Envelope",
+                        "switch by intent",
+                        "proxy to n8n",
+                        "return JSON"
+                    ]
+                }
+            },
+            {
+                "id": "ui_components",
+                "purpose": "Generate accessible mobile-first components for goals and contributions.",
+                "inputs": [
+                    "ui_contracts",
+                    "a11y_perf"
+                ],
+                "expected_output": {
+                    "file_suggestions": [
+                        "src/app/savings/page.tsx",
+                        "src/app/savings/[goalId]/page.tsx",
+                        "src/components/savings/GoalCard.tsx",
+                        "src/components/savings/ContributionForm.tsx",
+                        "src/components/savings/PlanSuggestSheet.tsx"
+                    ]
+                }
+            }
+        ]
+    },
+    "testing": {
+        "cases": [
+            {
+                "name": "Create emergency goal",
+                "request": {
+                    "user_id_hash": "7f1b...abcd0001abcd0001abcd0001abcd0001abcd0001abcd0001abcd0001",
+                    "session_id": "f6c3e2b2-2f4a-4d5c-9c61-1a2b3c4d5e6f",
+                    "intent": "SAV_GOAL_CREATE",
+                    "locale": "en-ZA",
+                    "tz": "Africa/Johannesburg",
+                    "ts": "2025-11-20T10:00:00Z",
+                    "app_ver": "1.0.0",
+                    "pull_count_today": 1,
+                    "offline_seq": 0,
+                    "payload": {
+                        "name": "Emergency Fund",
+                        "target_cents": 500000,
+                        "target_date": "2026-06-01",
+                        "priority": 5,
+                        "category": "emergency",
+                        "notes": "For unplanned costs"
+                    }
+                },
+                "expect_http": 200,
+                "expect_schema_ref": "Goal"
+            },
+            {
+                "name": "Suggest plan from monthly budget",
+                "request": {
+                    "user_id_hash": "7f1b...abcd0001abcd0001abcd0001abcd0001abcd0001abcd0001abcd0001",
+                    "session_id": "f6c3e2b2-2f4a-4d5c-9c61-1a2b3c4d5e6f",
+                    "intent": "SAV_BUDGET_SEGMENT",
+                    "locale": "en-ZA",
+                    "tz": "Africa/Johannesburg",
+                    "ts": "2025-11-20T10:05:00Z",
+                    "app_ver": "1.0.0",
+                    "pull_count_today": 2,
+                    "offline_seq": 0,
+                    "payload": {
+                        "period": "monthly",
+                        "income_cents": 400000,
+                        "expense_items": [
+                            {
+                                "name": "Food",
+                                "amount_cents": 120000,
+                                "category": "food"
+                            },
+                            {
+                                "name": "Transport",
+                                "amount_cents": 60000,
+                                "category": "transport"
+                            },
+                            {
+                                "name": "Data",
+                                "amount_cents": 30000,
+                                "category": "data"
+                            }
+                        ]
+                    }
+                },
+                "expect_http": 200,
+                "expect_schema_ref": "PlanSuggestion"
+            },
+            {
+                "name": "Rate limit hit",
+                "request_meta": "repeat 21 times in same UTC day",
+                "expect_http": 429,
+                "expect_error": "E_RATE_LIMIT"
+            }
+        ]
+    }
+}

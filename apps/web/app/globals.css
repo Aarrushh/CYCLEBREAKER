@@ -4,13 +4,25 @@
 
 @layer base {
   :root {
-    --primary: #1B5E20;
-    --secondary: #F57C00;
-    --accent: #00ACC1;
-    --background: #FAFAFA;
-    --foreground: #212121;
-    --success: #7CB342;
-    --warning: #FF7043;
+    /* Premium Palette */
+    --primary: #00C853; /* Vibrant Green */
+    --secondary: #FF6D00; /* Deep Orange */
+    --accent: #00B0FF; /* Electric Blue */
+    --background: #F0F2F5; /* Soft Gray-Blue */
+    --foreground: #1A1A1A; /* Near Black */
+    --success: #00E676;
+    --warning: #FFAB40;
+    --error: #FF5252;
+    --glass-bg: rgba(255, 255, 255, 0.85);
+    --glass-border: rgba(255, 255, 255, 0.5);
+  }
+
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
   }
 
   html, body { height: 100%; }

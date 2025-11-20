@@ -1,5 +1,12 @@
 # Final Plan — CycleBreaker SA (Feasibility-first)
 
+> [!IMPORTANT]
+> This document is now **SUPERSEDED** by [RPO_PLAN.md](RPO_PLAN.md) which details the new Hybrid AI (Local + Server) architecture.
+> The content below is retained for domain context and feature ideas but the architecture (PWA-only, deterministic) is no longer the primary direction.
+
+## Legacy Plan Content Below
+
+
 Vision
 - Deliver explainable, transport-aware, profile-matched opportunities (grants, training, jobs, services) for low-income users in South Africa. Survival-first, trust-centric, and low-data by design.
 

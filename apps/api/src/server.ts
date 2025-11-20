@@ -4,7 +4,9 @@ import cors from '@fastify/cors'
 import { readFile } from 'node:fs/promises'
 import { z } from 'zod'
 import crypto from 'node:crypto'
+import { geminiChat } from './clients/gemini.js'
 import { nvidiaChat } from './clients/nvidia.js'
+import { unlimitedChat } from './clients/unlimited.js'
 import { resolveSecret } from './utils/secrets.js'
 import { suggestUserProfile } from './services/profile_suggest.js'
 import { rankJobsForCandidate, type Candidate, type Job } from '@cyclebreaker/shared'
@@ -275,10 +277,25 @@ export async function buildServer() {
 
     const system = 'You analyze job postings for scam risk in South Africa. Respond with a strict JSON object.'
     const user = `Analyze this job posting for scam indicators and return JSON: {risk_score:0-1,risk_level:\"low|medium|high\",flags:string[],confidence:0-1,explanation:string}.\nTitle:${title}\nOrganization:${organization}\nDescription:${description}`
-    const content = await nvidiaChat([
-      { role: 'system', content: system },
-      { role: 'user', content: user },
-    ], { model: process.env.NVIDIA_MODEL || 'meta/llama-3.1-70b-instruct', temperature: 0.2, max_tokens: 300 })
+    let content: string | undefined
+    try {
+      content = await geminiChat([
+        { role: 'system', content: system },
+        { role: 'user', content: user },
+      ], { model: process.env.GEMINI_MODEL || 'gemini-1.5-flash', temperature: 0.2, max_tokens: 300 })
+    } catch (e) {
+      try {
+        content = await nvidiaChat([
+          { role: 'system', content: system },
+          { role: 'user', content: user },
+        ], { model: process.env.NVIDIA_MODEL || 'meta/llama-3.1-70b-instruct', temperature: 0.2, max_tokens: 300 })
+      } catch (e2) {
+        content = await unlimitedChat([
+          { role: 'system', content: system },
+          { role: 'user', content: user },
+        ], { model: process.env.UNLIMITED_MODEL || 'gpt-4o-mini', temperature: 0.2, max_tokens: 300 })
+      }
+    }
 
     const text = (content || '').trim().replace(/^```json\s*|\s*```$/g, '')
     try {

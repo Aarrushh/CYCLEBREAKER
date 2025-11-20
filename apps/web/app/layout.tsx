@@ -27,7 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={inter.variable}>
       <body className="font-sans antialiased">
         <OfflineIndicatorBanner />
-        <header className="sticky top-0 z-40 bg-white border-b border-gray-200 px-md py-sm flex items-center justify-between">
+        <header className="sticky top-0 z-40 glass px-md py-sm flex items-center justify-between mb-md">
           <Link href="/" className="flex items-center gap-2">
             <div className="w-8 h-8 bg-[color:var(--primary)] rounded-full flex items-center justify-center text-white font-bold text-sm">CB</div>
             <span className="font-bold text-lg text-[color:var(--foreground)] hidden sm:inline">CycleBreaker</span>
@@ -43,7 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
         </header>
         <main className="min-h-[calc(100vh-120px)]">{children}</main>
-        <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 sm:hidden">
+        <nav className="fixed bottom-0 left-0 right-0 z-40 glass sm:hidden pb-safe">
           <div className="flex justify-around items-center py-sm">
             <Link href="/" className="flex flex-col items-center gap-1 min-h-[44px] min-w-[44px] justify-center">
               <Home className="w-6 h-6" />
