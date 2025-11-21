@@ -39,10 +39,10 @@ function createTextTexture(gl: any, text: string, font = 'bold 30px Inter', colo
 }
 
 class Title {
-  mesh!: Mesh;
+  mesh!: any;
   gl: any;
-  plane: Mesh;
-  renderer: Renderer;
+  plane: any;
+  renderer: any;
   text: string;
   textColor: string;
   font: string;
@@ -179,7 +179,7 @@ class Media {
   createTitle() {
     this.title = new Title({ gl: this.gl, plane: this.plane, renderer: this.renderer, text: this.text, textColor: this.textColor, font: this.font });
   }
-  update(scroll: any, direction: 'left'|'right') {
+  update(scroll: any, direction: 'left' | 'right') {
     this.plane.position.x = this.x - scroll.current - this.extra;
     const x = this.plane.position.x;
     const H = this.viewport.width / 2;
@@ -237,7 +237,7 @@ class Media {
 
 class App {
   container: HTMLElement;
-  renderer!: Renderer; gl!: any; camera: any; scene: any; planeGeometry: any; screen: any; viewport: any; medias: Media[] = []; mediasImages: Item[] = [];
+  renderer!: any; gl!: any; camera: any; scene: any; planeGeometry: any; screen: any; viewport: any; medias: Media[] = []; mediasImages: Item[] = [];
   scroll = { ease: 0.05, current: 0, target: 0, last: 0 };
   onCheckDebounce: any; raf: number | undefined; scrollSpeed = 2;
   boundOnResize!: any; boundOnWheel!: any; boundOnTouchDown!: any; boundOnTouchMove!: any; boundOnTouchUp!: any;
